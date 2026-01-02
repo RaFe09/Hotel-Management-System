@@ -54,31 +54,6 @@ session_start();
         </div>
     </section>
 
-    <section class="booking-widget">
-        <div class="container">
-            <div class="booking-form">
-                <div class="booking-field">
-                    <label>Check-in</label>
-                    <input type="date" value="2024-12-30">
-                </div>
-                <div class="booking-field">
-                    <label>Check-out</label>
-                    <input type="date" value="2024-12-31">
-                </div>
-                <div class="booking-field">
-                    <label>Guests</label>
-                    <select>
-                        <option>1 Guest</option>
-                        <option>2 Guests</option>
-                        <option>3 Guests</option>
-                        <option>4+ Guests</option>
-                    </select>
-                </div>
-                <button class="btn-book">Check Availability</button>
-            </div>
-        </div>
-    </section>
-
     <section id="overview" class="overview-section">
         <div class="container">
             <div class="overview-content">
