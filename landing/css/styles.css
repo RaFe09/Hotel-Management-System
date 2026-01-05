@@ -166,6 +166,17 @@ body {
     opacity: 0.9;
 }
 
+.hero-button {
+    margin-top: 2rem;
+}
+
+.hero-button .btn {
+    font-size: 1.125rem;
+    padding: 1rem 2.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
 /* Booking Widget */
 .booking-widget {
     background: #fff;

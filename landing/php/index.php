@@ -50,6 +50,9 @@ session_start();
                     <span class="stars">★★★★★</span>
                     <span class="rating-text">4.4 Guest Rating</span>
                 </div>
+                <div class="hero-button">
+                    <a href="../../rooms/php/rooms.php" class="btn btn-primary">Book Now</a>
+                </div>
             </div>
         </div>
     </section>
@@ -101,7 +104,7 @@ session_start();
             <div class="package-header">
                 <span class="package-badge">Special Package</span>
                 <h2>Romantic Honeymoon & Couples Getaway</h2>
-                <p>Create unforgettable memories with our exclusive couples package</p>
+                <p>Create unforgettable memories with our exclusive couples package in the Romantic Suite</p>
             </div>
             <div class="package-content">
                 <div class="package-image">
@@ -110,7 +113,7 @@ session_start();
                 <div class="package-details">
                     <h3>Package Includes</h3>
                     <ul class="package-features">
-                        <li>Luxury suite with romantic room setup and rose petals</li>
+                        <li>Romantic Suite with romantic room setup and rose petals</li>
                         <li>Champagne and chocolate-covered strawberries on arrival</li>
                         <li>Couples spa treatment session (60 minutes)</li>
                         <li>Romantic candlelit dinner for two at our signature restaurant</li>
@@ -121,7 +124,7 @@ session_start();
                     <div class="package-price">
                         <span class="price-label">Starting from</span>
                         <div class="price-main">
-                            <span class="price-amount">৳3,000</span>
+                            <span class="price-amount">৳15,000</span>
                             <span class="price-period">per night</span>
                         </div>
                     </div>
@@ -187,6 +190,22 @@ session_start();
                             <span>Butler</span>
                         </div>
                         <div class="room-price">From ৳12,000/night</div>
+                    </div>
+                </div>
+                <div class="room-card">
+                    <div class="room-image">
+                        <img src="../../image/Romantic Suite.jpg" alt="Romantic Suite" class="room-img">
+                    </div>
+                    <div class="room-info">
+                        <h3>Romantic Suite</h3>
+                        <p class="room-size">650 sq ft</p>
+                        <p class="room-description">Intimate and luxurious escape designed for couples with elegant décor.</p>
+                        <div class="room-features">
+                            <span>King Bed</span>
+                            <span>Jacuzzi</span>
+                            <span>Romantic</span>
+                        </div>
+                        <div class="room-price">From ৳15,000/night</div>
                     </div>
                 </div>
             </div>

@@ -1,10 +1,61 @@
 <?php
 
 session_start();
-require_once __DIR__ . '/../controllers/AuthController.php';
 
-$authController = new AuthController();
-$errors = $authController->login();
+// Redirect if already logged in
+if (isset($_SESSION['user_id'])) {
+    header("Location: ../Landing/php/index.php");
+    exit();
+}
+if (isset($_SESSION['admin_id'])) {
+    header("Location: ../../admin/php/dashboard.php");
+    exit();
+}
+
+require_once __DIR__ . '/../controllers/AuthController.php';
+require_once __DIR__ . '/../../admin/controllers/AdminAuthController.php';
+require_once __DIR__ . '/../models/Customer.php';
+
+$errors = [];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+
+    if (empty($email)) {
+        $errors[] = "Email is required.";
+    }
+
+    if (empty($password)) {
+        $errors[] = "Password is required.";
+    }
+
+    if (empty($errors)) {
+        // Try admin login first
+        $adminAuthController = new AdminAuthController();
+        if ($adminAuthController->loginByEmail($email, $password)) {
+            // Admin login successful - redirect handled in loginByEmail
+            header("Location: ../../admin/php/dashboard.php");
+            exit();
+        }
+        
+        // If not admin, try user login
+        $authController = new AuthController();
+        $customer = new Customer();
+        $customer->email = $email;
+        $customer->password = $password;
+        
+        if ($customer->login()) {
+            $_SESSION['user_id'] = $customer->id;
+            $_SESSION['user_name'] = $customer->first_name . ' ' . $customer->last_name;
+            $_SESSION['user_email'] = $customer->email;
+            header("Location: ../Landing/php/index.php");
+            exit();
+        } else {
+            $errors[] = "Invalid email or password.";
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,6 +92,7 @@ $errors = $authController->login();
                         placeholder="Enter your email"
                         value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
                         required
+                        autofocus
                     >
                 </div>
 
@@ -71,7 +123,7 @@ $errors = $authController->login();
 
             <div class="auth-footer">
                 <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
-                <p><a href="../Landing/php/index.php" class="back-link">← Back to Home</a></p>
+                <p><a href="../../Landing/php/index.php" class="back-link">← Back to Home</a></p>
             </div>
         </div>
     </div>
