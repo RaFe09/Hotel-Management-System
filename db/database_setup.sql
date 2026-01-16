@@ -1,11 +1,11 @@
--- Database Setup for Hotel Management System
--- Customer Authentication Tables
+
+
 
 CREATE DATABASE IF NOT EXISTS hotel_management;
 
 USE hotel_management;
 
--- Customers Table
+
 CREATE TABLE IF NOT EXISTS customers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
