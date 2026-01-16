@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 class Admin {
     private $conn;
@@ -19,9 +19,9 @@ class Admin {
         $this->conn = $database->getConnection();
     }
 
-    /**
-     * Check if username exists
-     */
+    
+
+
     public function usernameExists() {
         $query = "SELECT id, username, email, password, full_name 
                   FROM " . $this->table_name . " 
@@ -44,9 +44,9 @@ class Admin {
         return false;
     }
 
-    /**
-     * Check if email exists
-     */
+    
+
+
     public function emailExists() {
         $query = "SELECT id, username, email, password, full_name 
                   FROM " . $this->table_name . " 
@@ -69,16 +69,16 @@ class Admin {
         return false;
     }
 
-    /**
-     * Login admin by email
-     */
+    
+
+
     public function loginByEmail() {
         $plain_password = $this->password;
         
         if ($this->emailExists()) {
-            // After emailExists(), $this->password now contains the hashed password from DB
+             
             $hashed_password = $this->password;
-            // Verify the plain password against the hashed password
+             
             if (password_verify($plain_password, $hashed_password)) {
                 return true;
             }
@@ -86,16 +86,16 @@ class Admin {
         return false;
     }
 
-    /**
-     * Login admin by username (kept for backward compatibility)
-     */
+    
+
+
     public function login() {
         $plain_password = $this->password;
         
         if ($this->usernameExists()) {
-            // After usernameExists(), $this->password now contains the hashed password from DB
+             
             $hashed_password = $this->password;
-            // Verify the plain password against the hashed password
+             
             if (password_verify($plain_password, $hashed_password)) {
                 return true;
             }
@@ -103,9 +103,9 @@ class Admin {
         return false;
     }
 
-    /**
-     * Get admin by ID
-     */
+    
+
+
     public function getById($id) {
         $query = "SELECT id, username, email, full_name, created_at 
                   FROM " . $this->table_name . " 

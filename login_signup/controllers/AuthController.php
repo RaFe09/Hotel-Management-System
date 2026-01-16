@@ -86,7 +86,7 @@ class AuthController {
                     $_SESSION['user_id'] = $this->customer->id;
                     $_SESSION['user_name'] = $this->customer->first_name . ' ' . $this->customer->last_name;
                     $_SESSION['user_email'] = $this->customer->email;
-                    header("Location: ../Landing/php/index.php");
+                    header("Location: ../../landing/php/index.php");
                     exit();
                 } else {
                     $errors[] = "Invalid email or password.";

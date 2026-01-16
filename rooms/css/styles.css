@@ -18,7 +18,7 @@ body {
     margin: 0 auto;
 }
 
-/* Header Styles */
+
 .rooms-header {
     background: linear-gradient(135deg, #8B0000 0%, #6B0000 100%);
     color: white;
@@ -57,7 +57,7 @@ body {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Statistics Section */
+
 .statistics-section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -121,7 +121,7 @@ body {
     background: #e3f2fd;
 }
 
-/* Filter Section */
+
 .filter-section {
     margin-bottom: 2rem;
 }
@@ -159,7 +159,7 @@ body {
     border-color: #8B0000;
 }
 
-/* Rooms Section */
+
 .rooms-section {
     margin-bottom: 3rem;
     display: block;
@@ -208,7 +208,7 @@ body {
     font-weight: normal;
 }
 
-/* Rooms Grid */
+
 .rooms-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -225,7 +225,7 @@ body {
     font-size: 1.1rem;
 }
 
-/* Room Card */
+
 .room-card {
     background: white;
     border-radius: 12px;
@@ -334,7 +334,7 @@ body {
     border-top: 1px solid #e0e0e0;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .rooms-header h1 {
         font-size: 2rem;
@@ -377,7 +377,7 @@ body {
     }
 }
 
-/* Room Types Section */
+
 .room-types-section {
     margin-bottom: 3rem;
 }
@@ -499,7 +499,7 @@ body {
     color: #6B0000;
 }
 
-/* Room Detail Page - Hero Section */
+
 .room-detail-hero {
     position: relative;
     margin-bottom: 3rem;
@@ -579,7 +579,7 @@ body {
     font-weight: bold;
 }
 
-/* Room Detail Content */
+
 .room-detail-content {
     display: grid;
     grid-template-columns: 1fr 400px;
@@ -618,7 +618,7 @@ body {
     margin: 0;
 }
 
-/* Specifications Grid */
+
 .specs-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -669,7 +669,7 @@ body {
     color: #1a1a1a;
 }
 
-/* Amenities Grid */
+
 .amenities-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -696,7 +696,7 @@ body {
     color: #333;
 }
 
-/* Booking Sidebar */
+
 .detail-sidebar {
     position: sticky;
     top: 20px;
@@ -813,14 +813,14 @@ body {
     line-height: 1.5;
 }
 
-/* Responsive Design for Room Types */
+
 @media (max-width: 768px) {
     .room-types-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* Responsive Design for Room Detail Page */
+
 @media (max-width: 1024px) {
     .room-detail-content {
         grid-template-columns: 1fr;
@@ -869,7 +869,7 @@ body {
     }
 }
 
-/* Booking Page Styles */
+
 .booking-page {
     background: white;
     border-radius: 16px;
@@ -1199,7 +1199,7 @@ body {
     text-align: center;
 }
 
-/* Responsive Design for Booking Page */
+
 @media (max-width: 1024px) {
     .booking-content {
         grid-template-columns: 1fr;

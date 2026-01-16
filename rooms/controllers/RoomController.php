@@ -9,9 +9,9 @@ class RoomController {
         $this->room = new Room();
     }
 
-    /**
-     * Get all rooms grouped by status
-     */
+    
+
+
     public function getAllRooms() {
         return [
             'available' => $this->room->getAvailable(),
@@ -21,16 +21,16 @@ class RoomController {
         ];
     }
 
-    /**
-     * Get room statistics
-     */
+    
+
+
     public function getStatistics() {
         return $this->room->getStatistics();
     }
 
-    /**
-     * Get rooms by status
-     */
+    
+
+
     public function getRoomsByStatus($status) {
         $validStatuses = ['available', 'booked', 'maintenance'];
         if (!in_array($status, $validStatuses)) {
@@ -39,16 +39,16 @@ class RoomController {
         return $this->room->getByStatus($status);
     }
 
-    /**
-     * Get rooms by type
-     */
+    
+
+
     public function getRoomsByType($roomType) {
         return $this->room->getByType($roomType);
     }
 
-    /**
-     * Get all rooms grouped by type
-     */
+    
+
+
     public function getRoomsByTypeGrouped() {
         $roomTypes = ['Deluxe Room', 'Executive Suite', 'Presidential Suite', 'Romantic Suite'];
         $result = [];

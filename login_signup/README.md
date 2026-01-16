@@ -6,8 +6,6 @@ This module follows the MVC (Model-View-Controller) architecture pattern, simila
 
 ```
 login_signup/
-├── config/
-│   └── database.php          # Database configuration
 ├── models/
 │   └── Customer.php          # Customer model (database operations)
 ├── controllers/
@@ -63,7 +61,7 @@ CREATE TABLE IF NOT EXISTS customers (
 
 ## Configuration
 
-Update database credentials in `config/database.php`:
+Update database credentials in `../../config/database.php` (shared configuration):
 - `$host`: Database host (default: localhost)
 - `$db_name`: Database name (default: hotel_management)
 - `$username`: Database username (default: root)

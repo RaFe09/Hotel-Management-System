@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 class Booking {
     private $conn;
@@ -24,9 +24,9 @@ class Booking {
         $this->conn = $database->getConnection();
     }
 
-    /**
-     * Create a new booking
-     */
+    
+
+
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                   (customer_id, room_id, room_type, check_in_date, check_out_date, 
@@ -54,9 +54,9 @@ class Booking {
         return false;
     }
 
-    /**
-     * Get available rooms for a date range
-     */
+    
+
+
     public function getAvailableRoomsForDates($roomType, $checkIn, $checkOut) {
         $query = "SELECT r.* FROM rooms r
                   WHERE r.room_type = :room_type 
@@ -80,9 +80,62 @@ class Booking {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Update room status to booked
-     */
+    
+
+
+    public function getAvailableRoomsListForDates($roomType, $checkIn, $checkOut) {
+        $query = "SELECT r.* FROM rooms r
+                  WHERE r.room_type = :room_type
+                  AND r.status = 'available'
+                  AND r.id NOT IN (
+                      SELECT b.room_id FROM bookings b
+                      WHERE b.status IN ('pending', 'confirmed')
+                      AND (
+                          (b.check_in_date <= :check_out AND b.check_out_date >= :check_in)
+                      )
+                  )
+                  ORDER BY r.floor_number, r.room_number";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":room_type", $roomType);
+        $stmt->bindParam(":check_in", $checkIn);
+        $stmt->bindParam(":check_out", $checkOut);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    
+
+
+
+    public function getAvailableRoomByIdForDates($roomId, $roomType, $checkIn, $checkOut) {
+        $query = "SELECT r.* FROM rooms r
+                  WHERE r.id = :room_id
+                  AND r.room_type = :room_type
+                  AND r.status = 'available'
+                  AND r.id NOT IN (
+                      SELECT b.room_id FROM bookings b
+                      WHERE b.status IN ('pending', 'confirmed')
+                      AND (
+                          (b.check_in_date <= :check_out AND b.check_out_date >= :check_in)
+                      )
+                  )
+                  LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":room_id", $roomId);
+        $stmt->bindParam(":room_type", $roomType);
+        $stmt->bindParam(":check_in", $checkIn);
+        $stmt->bindParam(":check_out", $checkOut);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    
+
+
     public function updateRoomStatus($roomId, $status = 'booked') {
         $query = "UPDATE rooms SET status = :status WHERE id = :room_id";
         $stmt = $this->conn->prepare($query);
@@ -91,9 +144,9 @@ class Booking {
         return $stmt->execute();
     }
 
-    /**
-     * Calculate total price
-     */
+    
+
+
     public function calculateTotalPrice($pricePerNight, $checkIn, $checkOut) {
         $checkInDate = new DateTime($checkIn);
         $checkOutDate = new DateTime($checkOut);
@@ -101,9 +154,9 @@ class Booking {
         return $pricePerNight * $nights;
     }
 
-    /**
-     * Get booking by ID
-     */
+    
+
+
     public function getById($id) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
@@ -116,9 +169,9 @@ class Booking {
         return null;
     }
 
-    /**
-     * Get bookings by customer ID
-     */
+    
+
+
     public function getByCustomerId($customerId) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE customer_id = :customer_id 

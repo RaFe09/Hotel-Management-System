@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 class Room {
     private $conn;
@@ -21,9 +21,9 @@ class Room {
         $this->conn = $database->getConnection();
     }
 
-    /**
-     * Get all rooms
-     */
+    
+
+
     public function getAll() {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY floor_number, room_number";
         $stmt = $this->conn->prepare($query);
@@ -31,9 +31,9 @@ class Room {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get rooms by status
-     */
+    
+
+
     public function getByStatus($status) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE status = :status 
@@ -44,30 +44,30 @@ class Room {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get available rooms
-     */
+    
+
+
     public function getAvailable() {
         return $this->getByStatus('available');
     }
 
-    /**
-     * Get booked rooms
-     */
+    
+
+
     public function getBooked() {
         return $this->getByStatus('booked');
     }
 
-    /**
-     * Get maintenance rooms
-     */
+    
+
+
     public function getMaintenance() {
         return $this->getByStatus('maintenance');
     }
 
-    /**
-     * Get room statistics
-     */
+    
+
+
     public function getStatistics() {
         $query = "SELECT 
                     status,
@@ -93,9 +93,9 @@ class Room {
         return $stats;
     }
 
-    /**
-     * Get rooms by type
-     */
+    
+
+
     public function getByType($roomType) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE room_type = :room_type 
@@ -106,9 +106,9 @@ class Room {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get room by ID
-     */
+    
+
+
     public function getById($id) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);

@@ -10,10 +10,10 @@ AdminAuthController::requireLogin();
 $bookingController = new AdminBookingController();
 $room = new Room();
 
-// Get statistics
+ 
 $roomStats = $room->getStatistics();
 $allBookings = $bookingController->getAllBookings();
-$recentBookings = array_slice($allBookings, 0, 5); // Get 5 most recent
+$recentBookings = array_slice($allBookings, 0, 5);  
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,15 +31,22 @@ $recentBookings = array_slice($allBookings, 0, 5); // Get 5 most recent
                 <div class="header-actions">
                     <span class="admin-name">Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
                     <a href="book-room.php" class="btn btn-primary">Book Room</a>
+                    <a href="manage-rooms.php" class="btn btn-outline">Manage Rooms</a>
+                    <a href="rooms-crud.php" class="btn btn-outline">Room Listings</a>
                     <a href="bookings.php" class="btn btn-outline">Manage Bookings</a>
                     <a href="customers.php" class="btn btn-outline">Manage Customers</a>
+                    <a href="staff.php" class="btn btn-outline">Staff</a>
+                    <a href="reports.php" class="btn btn-outline">Reports</a>
+                    <a href="complaints.php" class="btn btn-outline">Complaints</a>
+                    <a href="service-requests.php" class="btn btn-outline">Service Requests</a>
+                    <a href="staff-performance.php" class="btn btn-outline">Performance</a>
                     <a href="logout.php" class="btn btn-outline">Logout</a>
                 </div>
             </div>
         </header>
 
         <main class="admin-main">
-            <!-- Statistics Cards -->
+            
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon available">🏨</div>
@@ -78,7 +85,7 @@ $recentBookings = array_slice($allBookings, 0, 5); // Get 5 most recent
                 </div>
             </div>
 
-            <!-- Recent Bookings -->
+            
             <div class="dashboard-section">
                 <div class="section-header">
                     <h2>Recent Bookings</h2>

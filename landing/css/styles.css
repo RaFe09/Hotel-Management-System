@@ -1,4 +1,4 @@
-/* Reset and Base Styles */
+
 * {
     margin: 0;
     padding: 0;
@@ -17,7 +17,7 @@ body {
     padding: 0 20px;
 }
 
-/* Navigation */
+
 .navbar {
     background: #fff;
     border-bottom: 1px solid #e0e0e0;
@@ -98,7 +98,7 @@ body {
     background: #333;
 }
 
-/* Hero Section */
+
 .hero-section {
     margin-top: 70px;
     position: relative;
@@ -177,7 +177,7 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Booking Widget */
+
 .booking-widget {
     background: #fff;
     padding: 2rem 0;
@@ -239,7 +239,7 @@ body {
     background: #6B0000;
 }
 
-/* Overview Section */
+
 .overview-section {
     padding: 80px 0;
     background: #fff;
@@ -343,7 +343,7 @@ body {
     opacity: 0.7;
 }
 
-/* Honeymoon Package Section */
+
 .honeymoon-package {
     padding: 80px 0;
     background: #f8f8f8;
@@ -481,7 +481,7 @@ body {
     flex-wrap: wrap;
 }
 
-/* Rooms Section */
+
 .rooms-section {
     padding: 80px 0;
     background: #fff;
@@ -588,7 +588,7 @@ body {
     margin-top: 1rem;
 }
 
-/* Dining Section */
+
 .dining-section {
     padding: 80px 0;
     background: #f8f8f8;
@@ -661,7 +661,7 @@ body {
     font-weight: 500;
 }
 
-/* Amenities Section */
+
 .amenities-section {
     padding: 80px 0;
     background: #fff;
@@ -722,7 +722,7 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Location Section */
+
 .location-section {
     padding: 80px 0;
     background: #f8f8f8;
@@ -805,7 +805,7 @@ body {
     justify-content: center;
 }
 
-/* Buttons */
+
 .btn {
     padding: 0.75rem 2rem;
     border-radius: 4px;
@@ -838,7 +838,7 @@ body {
     color: #fff;
 }
 
-/* Contact Section */
+
 .contact {
     padding: 80px 0;
     background: #fff;
@@ -898,7 +898,7 @@ body {
     resize: vertical;
 }
 
-/* Footer */
+
 .footer {
     background: #1a1a1a;
     color: #fff;
@@ -949,7 +949,7 @@ body {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .hamburger {
         display: flex;

@@ -7,7 +7,7 @@ $roomController = new RoomController();
 $roomsByType = $roomController->getRoomsByTypeGrouped();
 $statistics = $roomController->getStatistics();
 
-// Function to get room image based on room type
+ 
 function getRoomImage($roomType) {
     $imageMap = [
         'Deluxe Room' => 'Deluxe Room.png',
@@ -20,12 +20,12 @@ function getRoomImage($roomType) {
     return '../../image/' . $imageName;
 }
 
-// Function to get room type URL slug
+ 
 function getRoomTypeSlug($roomType) {
     return strtolower(str_replace(' ', '-', $roomType));
 }
 
-// Function to get price range for room type
+ 
 function getPriceRange($rooms) {
     if (empty($rooms)) {
         return 'N/A';
@@ -55,10 +55,14 @@ function getPriceRange($rooms) {
             <h2>Room Management</h2>
             <div class="header-actions">
                 <a href="../../landing/php/index.php" class="btn-back">← Back to Home</a>
+                <a href="search.php" class="btn-back" style="margin-left: 10px;">Search Rooms</a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="my-bookings.php" class="btn-back" style="margin-left: 10px;">My Bookings</a>
+                <?php endif; ?>
             </div>
         </header>
 
-        <!-- Statistics Section -->
+        
         <section class="statistics-section">
             <div class="stat-card stat-total">
                 <div class="stat-icon">🏨</div>
@@ -90,7 +94,7 @@ function getPriceRange($rooms) {
             </div>
         </section>
 
-        <!-- Room Types Section -->
+        
         <section class="room-types-section">
             <h2 class="section-title">Choose Your Room Type</h2>
             <div class="room-types-grid">

@@ -1,4 +1,4 @@
-// Mobile Navigation Toggle
+
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('navMenu');
 
@@ -7,7 +7,7 @@ if (hamburger && navMenu) {
         navMenu.classList.toggle('active');
     });
 
-    // Close menu when clicking on a link
+    
     document.querySelectorAll('.nav-menu a').forEach(link => {
         link.addEventListener('click', () => {
             navMenu.classList.remove('active');
@@ -15,7 +15,7 @@ if (hamburger && navMenu) {
     });
 }
 
-// Smooth Scrolling for Navigation Links
+
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -30,7 +30,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Tab Functionality for Experiences Section
+
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -38,11 +38,11 @@ tabButtons.forEach(button => {
     button.addEventListener('click', () => {
         const targetTab = button.getAttribute('data-tab');
         
-        // Remove active class from all buttons and contents
+        
         tabButtons.forEach(btn => btn.classList.remove('active'));
         tabContents.forEach(content => content.classList.remove('active'));
         
-        // Add active class to clicked button and corresponding content
+        
         button.classList.add('active');
         const targetContent = document.getElementById(targetTab);
         if (targetContent) {
@@ -51,7 +51,7 @@ tabButtons.forEach(button => {
     });
 });
 
-// Contact Form Handling
+
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
     contactForm.addEventListener('submit', (e) => {

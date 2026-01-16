@@ -51,7 +51,12 @@ session_start();
                     <span class="rating-text">4.4 Guest Rating</span>
                 </div>
                 <div class="hero-button">
-                    <a href="../../rooms/php/rooms.php" class="btn btn-primary">Book Now</a>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a href="../../rooms/php/rooms.php" class="btn btn-primary">Book Now</a>
+                        <a href="../../rooms/php/my-bookings.php" class="btn btn-primary" style="margin-left: 10px;">My Bookings</a>
+                    <?php else: ?>
+                        <a href="../../rooms/php/rooms.php" class="btn btn-primary">Book Now</a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

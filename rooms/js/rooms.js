@@ -1,21 +1,21 @@
-// Room Filter Functionality
+
 document.addEventListener('DOMContentLoaded', function() {
     const filterTabs = document.querySelectorAll('.filter-tab');
     const roomSections = document.querySelectorAll('.rooms-section');
 
-    // Initialize: Show all rooms by default
+    
     showAllRooms();
 
-    // Add click event listeners to filter tabs
+    
     filterTabs.forEach(tab => {
         tab.addEventListener('click', function() {
             const status = this.getAttribute('data-status');
 
-            // Update active tab
+            
             filterTabs.forEach(t => t.classList.remove('active'));
             this.classList.add('active');
 
-            // Filter rooms
+            
             if (status === 'all') {
                 showAllRooms();
             } else {
@@ -24,18 +24,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    /**
-     * Show all rooms
-     */
+    
+
+
     function showAllRooms() {
         roomSections.forEach(section => {
             section.classList.remove('hidden');
         });
     }
 
-    /**
-     * Show rooms by specific status
-     */
+    
+
+
     function showRoomsByStatus(status) {
         roomSections.forEach(section => {
             const sectionStatus = section.getAttribute('data-status');
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Smooth scroll to section when filtering
+    
     filterTabs.forEach(tab => {
         tab.addEventListener('click', function() {
             const status = this.getAttribute('data-status');

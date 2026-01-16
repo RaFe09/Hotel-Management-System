@@ -10,7 +10,7 @@ $controller = new AdminBookingController();
 $message = '';
 $error = '';
 
-// Handle delete
+ 
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $result = $controller->deleteBooking($_GET['delete']);
     if ($result['success']) {
@@ -20,13 +20,28 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     }
 }
 
-// Handle status update
+ 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'update_status') {
     $result = $controller->updateBookingStatus($_POST['booking_id'], $_POST['status']);
     if ($result['success']) {
         $message = $result['message'];
     } else {
         $error = implode(', ', $result['errors']);
+    }
+}
+
+ 
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'update_booking') {
+    $bookingId = intval($_POST['booking_id'] ?? 0);
+    if ($bookingId > 0) {
+        $result = $controller->updateBooking($bookingId, $_POST);
+        if ($result['success']) {
+            $message = $result['message'];
+        } else {
+            $error = implode(', ', $result['errors']);
+        }
+    } else {
+        $error = "Invalid booking id";
     }
 }
 
@@ -87,6 +102,12 @@ $bookings = $controller->getAllBookings();
             border-radius: 4px;
             font-size: 14px;
         }
+        .special-requests-cell {
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -134,13 +155,14 @@ $bookings = $controller->getAllBookings();
                                 <th>Guests</th>
                                 <th>Total Price</th>
                                 <th>Status</th>
+                                <th>Special Requests</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($bookings)): ?>
                                 <tr>
-                                    <td colspan="9" class="text-center">No bookings found</td>
+                                    <td colspan="10" class="text-center">No bookings found</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($bookings as $booking): ?>
@@ -163,8 +185,17 @@ $bookings = $controller->getAllBookings();
                                                 <?php echo ucfirst($booking['status']); ?>
                                             </span>
                                         </td>
+                                        <td class="special-requests-cell" title="<?php echo htmlspecialchars($booking['special_requests'] ?? ''); ?>">
+                                            <?php if (!empty($booking['special_requests'])): ?>
+                                                <?php echo htmlspecialchars($booking['special_requests']); ?>
+                                            <?php else: ?>
+                                                <span style="color:#999;">—</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <div class="action-buttons">
+                                                <button onclick="openEditModal(<?php echo htmlspecialchars(json_encode($booking)); ?>)" 
+                                                        class="btn btn-outline btn-small">Edit</button>
                                                 <button onclick="openStatusModal(<?php echo $booking['id']; ?>, '<?php echo htmlspecialchars($booking['status']); ?>')" 
                                                         class="btn btn-primary btn-small">Change Status</button>
                                                 <a href="?delete=<?php echo $booking['id']; ?>" 
@@ -182,7 +213,7 @@ $bookings = $controller->getAllBookings();
         </main>
     </div>
 
-    <!-- Status Update Modal -->
+    
     <div id="statusModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeStatusModal()">&times;</span>
@@ -209,6 +240,56 @@ $bookings = $controller->getAllBookings();
         </div>
     </div>
 
+    
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Booking</h2>
+            <form method="POST" action="">
+                <input type="hidden" name="action" value="update_booking">
+                <input type="hidden" name="booking_id" id="edit_booking_id">
+
+                <div class="form-group">
+                    <label for="edit_check_in">Check-in Date</label>
+                    <input type="date" id="edit_check_in" name="check_in_date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_check_out">Check-out Date</label>
+                    <input type="date" id="edit_check_out" name="check_out_date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_guests">Guests</label>
+                    <input type="number" id="edit_guests" name="number_of_guests" min="1" max="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_status">Status</label>
+                    <select id="edit_status" name="status" required>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed (Checked-out)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_special">Special Requests</label>
+                    <textarea id="edit_special" name="special_requests" rows="3"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+            <p style="margin-top:10px; color:#777; font-size: 13px;">
+                Note: This keeps the same room, and blocks obvious date conflicts.
+            </p>
+        </div>
+    </div>
+
     <script>
         function openStatusModal(bookingId, currentStatus) {
             document.getElementById('status_booking_id').value = bookingId;
@@ -220,10 +301,28 @@ $bookings = $controller->getAllBookings();
             document.getElementById('statusModal').style.display = 'none';
         }
 
+        function openEditModal(booking) {
+            document.getElementById('edit_booking_id').value = booking.id;
+            document.getElementById('edit_check_in').value = booking.check_in_date;
+            document.getElementById('edit_check_out').value = booking.check_out_date;
+            document.getElementById('edit_guests').value = booking.number_of_guests;
+            document.getElementById('edit_status').value = booking.status;
+            document.getElementById('edit_special').value = booking.special_requests || '';
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
         window.onclick = function(event) {
             const modal = document.getElementById('statusModal');
+            const editModal = document.getElementById('editModal');
             if (event.target == modal) {
                 closeStatusModal();
+            }
+            if (event.target == editModal) {
+                closeEditModal();
             }
         }
     </script>

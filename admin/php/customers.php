@@ -10,7 +10,7 @@ $controller = new AdminBookingController();
 $message = '';
 $error = '';
 
-// Handle delete
+ 
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $result = $controller->deleteCustomer($_GET['delete']);
     if ($result['success']) {
@@ -20,7 +20,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     }
 }
 
-// Handle update
+ 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'update') {
     $result = $controller->updateCustomer($_POST['customer_id'], $_POST);
     if ($result['success']) {
@@ -158,7 +158,7 @@ $customers = $controller->getAllCustomers();
         </main>
     </div>
 
-    <!-- Edit Modal -->
+    
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>

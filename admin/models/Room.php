@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 class Room {
     private $conn;
@@ -21,9 +21,9 @@ class Room {
         $this->conn = $database->getConnection();
     }
 
-    /**
-     * Get all rooms
-     */
+    
+
+
     public function getAll() {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY floor_number, room_number";
         $stmt = $this->conn->prepare($query);
@@ -31,9 +31,9 @@ class Room {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get rooms by type
-     */
+    
+
+
     public function getByType($roomType) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE room_type = :room_type 
@@ -44,9 +44,9 @@ class Room {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get room statistics
-     */
+    
+
+
     public function getStatistics() {
         $query = "SELECT 
                     status,
@@ -72,9 +72,9 @@ class Room {
         return $stats;
     }
 
-    /**
-     * Get room by ID
-     */
+    
+
+
     public function getById($id) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
@@ -85,6 +85,106 @@ class Room {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }
         return null;
+    }
+
+    
+
+
+    public function updateStatus($id, $status) {
+        $validStatuses = ['available', 'booked', 'maintenance'];
+        if (!in_array($status, $validStatuses)) {
+            return false;
+        }
+
+        $query = "UPDATE " . $this->table_name . " 
+                  SET status = :status, updated_at = NOW() 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":status", $status);
+        $stmt->bindParam(":id", $id);
+        return $stmt->execute();
+    }
+
+    
+
+
+    public function create($data) {
+        $query = "INSERT INTO " . $this->table_name . " 
+                  (room_number, room_type, status, floor_number, price_per_night, description)
+                  VALUES
+                  (:room_number, :room_type, :status, :floor_number, :price_per_night, :description)";
+
+        $stmt = $this->conn->prepare($query);
+
+        $room_number = trim($data['room_number'] ?? '');
+        $room_type = trim($data['room_type'] ?? '');
+        $status = $data['status'] ?? 'available';
+        $floor_number = intval($data['floor_number'] ?? 0);
+        $price_per_night = $data['price_per_night'] ?? 0;
+        $description = trim($data['description'] ?? '');
+
+        $stmt->bindParam(":room_number", $room_number);
+        $stmt->bindParam(":room_type", $room_type);
+        $stmt->bindParam(":status", $status);
+        $stmt->bindParam(":floor_number", $floor_number);
+        $stmt->bindParam(":price_per_night", $price_per_night);
+        $stmt->bindParam(":description", $description);
+
+        return $stmt->execute();
+    }
+
+    
+
+
+    public function update($id, $data) {
+        $query = "UPDATE " . $this->table_name . "
+                  SET room_number = :room_number,
+                      room_type = :room_type,
+                      status = :status,
+                      floor_number = :floor_number,
+                      price_per_night = :price_per_night,
+                      description = :description,
+                      updated_at = NOW()
+                  WHERE id = :id";
+
+        $stmt = $this->conn->prepare($query);
+
+        $room_number = trim($data['room_number'] ?? '');
+        $room_type = trim($data['room_type'] ?? '');
+        $status = $data['status'] ?? 'available';
+        $floor_number = intval($data['floor_number'] ?? 0);
+        $price_per_night = $data['price_per_night'] ?? 0;
+        $description = trim($data['description'] ?? '');
+
+        $stmt->bindParam(":room_number", $room_number);
+        $stmt->bindParam(":room_type", $room_type);
+        $stmt->bindParam(":status", $status);
+        $stmt->bindParam(":floor_number", $floor_number);
+        $stmt->bindParam(":price_per_night", $price_per_night);
+        $stmt->bindParam(":description", $description);
+        $stmt->bindParam(":id", $id);
+
+        return $stmt->execute();
+    }
+
+    
+
+
+    public function delete($id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id);
+        return $stmt->execute();
+    }
+
+    
+
+
+    public function getDistinctTypes() {
+        $query = "SELECT DISTINCT room_type FROM " . $this->table_name . " ORDER BY room_type";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 }
 ?>

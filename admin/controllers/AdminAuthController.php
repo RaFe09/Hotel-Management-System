@@ -9,9 +9,9 @@ class AdminAuthController {
         $this->admin = new Admin();
     }
 
-    /**
-     * Handle admin login by email
-     */
+    
+
+
     public function loginByEmail($email, $password) {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -39,9 +39,9 @@ class AdminAuthController {
         return false;
     }
 
-    /**
-     * Handle admin login (kept for backward compatibility)
-     */
+    
+
+
     public function login() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -77,9 +77,9 @@ class AdminAuthController {
         return $errors;
     }
 
-    /**
-     * Check if admin is logged in
-     */
+    
+
+
     public static function isLoggedIn() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -87,9 +87,9 @@ class AdminAuthController {
         return isset($_SESSION['admin_id']);
     }
 
-    /**
-     * Require admin login (redirect if not logged in)
-     */
+    
+
+
     public static function requireLogin() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -100,9 +100,9 @@ class AdminAuthController {
         }
     }
 
-    /**
-     * Logout admin
-     */
+    
+
+
     public function logout() {
         session_start();
         session_unset();

@@ -15,15 +15,18 @@ class AdminBookingController {
         $this->customer = new Customer();
     }
 
-    /**
-     * Process booking for customer (create customer if needed)
-     */
+    
+
+
     public function processBooking($data) {
         $errors = [];
 
-        // Validate required fields
+         
         if (empty($data['room_type'])) {
             $errors[] = "Room type is required";
+        }
+        if (empty($data['room_id']) || intval($data['room_id']) <= 0) {
+            $errors[] = "Room number is required";
         }
         if (empty($data['check_in_date'])) {
             $errors[] = "Check-in date is required";
@@ -34,20 +37,24 @@ class AdminBookingController {
         if (empty($data['number_of_guests']) || $data['number_of_guests'] < 1) {
             $errors[] = "Number of guests must be at least 1";
         }
-        if (empty($data['customer_email'])) {
-            $errors[] = "Customer email is required";
-        }
-        if (empty($data['first_name'])) {
-            $errors[] = "Customer first name is required";
-        }
-        if (empty($data['last_name'])) {
-            $errors[] = "Customer last name is required";
-        }
-        if (empty($data['phone'])) {
-            $errors[] = "Customer phone is required";
+        
+         
+        if (empty($data['customer_id'])) {
+            if (empty($data['customer_email'])) {
+                $errors[] = "Customer email is required";
+            }
+            if (empty($data['first_name'])) {
+                $errors[] = "Customer first name is required";
+            }
+            if (empty($data['last_name'])) {
+                $errors[] = "Customer last name is required";
+            }
+            if (empty($data['phone'])) {
+                $errors[] = "Customer phone is required";
+            }
         }
 
-        // Validate dates
+         
         if (!empty($data['check_in_date']) && !empty($data['check_out_date'])) {
             $checkIn = new DateTime($data['check_in_date']);
             $checkOut = new DateTime($data['check_out_date']);
@@ -62,7 +69,7 @@ class AdminBookingController {
             }
         }
 
-        // Validate email format
+         
         if (!empty($data['customer_email']) && !filter_var($data['customer_email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = "Invalid email format";
         }
@@ -71,49 +78,60 @@ class AdminBookingController {
             return ['success' => false, 'errors' => $errors];
         }
 
-        // Find or create customer
-        $this->customer->email = $data['customer_email'];
+         
         $customerId = null;
 
-        if ($this->customer->emailExists()) {
-            // Customer exists, use their ID
-            $customerId = $this->customer->id;
+         
+        if (!empty($data['customer_id']) && is_numeric($data['customer_id'])) {
+            $existingCustomer = $this->customer->getById($data['customer_id']);
+            if ($existingCustomer) {
+                $customerId = $existingCustomer['id'];
+            } else {
+                return ['success' => false, 'errors' => ['Selected customer not found.']];
+            }
         } else {
-            // Create new customer
-            $this->customer->first_name = $data['first_name'];
-            $this->customer->last_name = $data['last_name'];
+             
             $this->customer->email = $data['customer_email'];
-            $this->customer->phone = $data['phone'];
-            $this->customer->password = ''; // Will generate random password in create method
-
-            if ($this->customer->create()) {
+            if ($this->customer->emailExists()) {
+                 
                 $customerId = $this->customer->id;
             } else {
-                return ['success' => false, 'errors' => ['Failed to create customer. Please try again.']];
+                 
+                $this->customer->first_name = $data['first_name'];
+                $this->customer->last_name = $data['last_name'];
+                $this->customer->email = $data['customer_email'];
+                $this->customer->phone = $data['phone'];
+                $this->customer->password = '';  
+
+                if ($this->customer->create()) {
+                    $customerId = $this->customer->id;
+                } else {
+                    return ['success' => false, 'errors' => ['Failed to create customer. Please try again.']];
+                }
             }
         }
 
-        // Get available room
-        $availableRoom = $this->booking->getAvailableRoomsForDates(
+         
+        $selectedRoom = $this->booking->getAvailableRoomByIdForDates(
+            intval($data['room_id']),
             $data['room_type'],
             $data['check_in_date'],
             $data['check_out_date']
         );
-
-        if (!$availableRoom) {
-            return ['success' => false, 'errors' => ['No available rooms for the selected dates']];
+        if (!$selectedRoom) {
+            return ['success' => false, 'errors' => ['Selected room is not available for the selected dates']];
         }
 
-        // Calculate total price
+         
         $totalPrice = $this->booking->calculateTotalPrice(
-            $availableRoom['price_per_night'],
+            $selectedRoom['price_per_night'],
             $data['check_in_date'],
             $data['check_out_date']
         );
 
-        // Create booking
+         
         $this->booking->customer_id = $customerId;
-        $this->booking->room_id = $availableRoom['id'];
+        $this->booking->room_id = $selectedRoom['id'];
         $this->booking->room_type = $data['room_type'];
         $this->booking->check_in_date = $data['check_in_date'];
         $this->booking->check_out_date = $data['check_out_date'];
@@ -123,13 +141,13 @@ class AdminBookingController {
         $this->booking->special_requests = $data['special_requests'] ?? '';
 
         if ($this->booking->create()) {
-            // Update room status
-            $this->booking->updateRoomStatus($availableRoom['id'], 'booked');
+             
+            $this->booking->updateRoomStatus($selectedRoom['id'], 'booked');
             
             return [
                 'success' => true,
                 'booking_id' => $this->booking->id,
-                'room_number' => $availableRoom['room_number'],
+                'room_number' => $selectedRoom['room_number'],
                 'customer_id' => $customerId,
                 'message' => 'Booking confirmed successfully!'
             ];
@@ -138,16 +156,16 @@ class AdminBookingController {
         return ['success' => false, 'errors' => ['Failed to create booking. Please try again.']];
     }
 
-    /**
-     * Get room details for booking
-     */
+    
+
+
     public function getRoomDetailsForBooking($roomType) {
         $rooms = $this->room->getByType($roomType);
         if (empty($rooms)) {
             return null;
         }
         
-        // Get price from first room (all same type have same price)
+         
         $room = $rooms[0];
         $availableCount = count(array_filter($rooms, function($r) {
             return $r['status'] === 'available';
@@ -160,23 +178,23 @@ class AdminBookingController {
         ];
     }
 
-    /**
-     * Get all bookings
-     */
+    
+
+
     public function getAllBookings() {
         return $this->booking->getAll();
     }
 
-    /**
-     * Get all customers
-     */
+    
+
+
     public function getAllCustomers() {
         return $this->customer->getAll();
     }
 
-    /**
-     * Update customer
-     */
+    
+
+
     public function updateCustomer($id, $data) {
         $errors = [];
 
@@ -212,9 +230,9 @@ class AdminBookingController {
         return ['success' => false, 'errors' => ['Failed to update customer']];
     }
 
-    /**
-     * Delete customer
-     */
+    
+
+
     public function deleteCustomer($id) {
         $this->customer->id = $id;
         if ($this->customer->delete()) {
@@ -223,9 +241,9 @@ class AdminBookingController {
         return ['success' => false, 'errors' => ['Failed to delete customer']];
     }
 
-    /**
-     * Update booking status
-     */
+    
+
+
     public function updateBookingStatus($id, $status) {
         $validStatuses = ['pending', 'confirmed', 'cancelled', 'completed'];
         if (!in_array($status, $validStatuses)) {
@@ -242,9 +260,9 @@ class AdminBookingController {
         return ['success' => false, 'errors' => ['Failed to update booking status']];
     }
 
-    /**
-     * Delete booking
-     */
+    
+
+
     public function deleteBooking($id) {
         $this->booking->id = $id;
         if ($this->booking->delete()) {
@@ -253,18 +271,104 @@ class AdminBookingController {
         return ['success' => false, 'errors' => ['Failed to delete booking']];
     }
 
-    /**
-     * Get customer by ID
-     */
+    
+
+
+
+    public function updateBooking($id, $data) {
+        $errors = [];
+
+        $booking = $this->booking->getById($id);
+        if (!$booking) {
+            return ['success' => false, 'errors' => ['Booking not found']];
+        }
+
+        $checkIn = $data['check_in_date'] ?? '';
+        $checkOut = $data['check_out_date'] ?? '';
+        $guests = intval($data['number_of_guests'] ?? 1);
+        $status = $data['status'] ?? $booking['status'];
+        $special = $data['special_requests'] ?? ($booking['special_requests'] ?? '');
+
+        if (empty($checkIn)) $errors[] = "Check-in date is required";
+        if (empty($checkOut)) $errors[] = "Check-out date is required";
+        if ($guests < 1) $errors[] = "Number of guests must be at least 1";
+
+        $validStatuses = ['pending', 'confirmed', 'cancelled', 'completed'];
+        if (!in_array($status, $validStatuses)) {
+            $errors[] = "Invalid status";
+        }
+
+        if (!empty($checkIn) && !empty($checkOut)) {
+            try {
+                $in = new DateTime($checkIn);
+                $out = new DateTime($checkOut);
+                if ($out <= $in) {
+                    $errors[] = "Check-out date must be after check-in date";
+                }
+            } catch (Exception $e) {
+                $errors[] = "Invalid date format";
+            }
+        }
+
+        if (!empty($errors)) {
+            return ['success' => false, 'errors' => $errors];
+        }
+
+         
+        $roomId = $booking['room_id'];
+        if ($this->booking->hasDateConflict($roomId, $checkIn, $checkOut, $id)) {
+            return ['success' => false, 'errors' => ['This room already has another booking in that date range']];
+        }
+
+         
+        $room = $this->room->getById($roomId);
+        if (!$room) {
+            return ['success' => false, 'errors' => ['Room not found for this booking']];
+        }
+        $totalPrice = $this->booking->calculateTotalPrice($room['price_per_night'], $checkIn, $checkOut);
+
+         
+        $this->booking->id = $id;
+        $this->booking->room_type = $booking['room_type'];  
+        $this->booking->check_in_date = $checkIn;
+        $this->booking->check_out_date = $checkOut;
+        $this->booking->number_of_guests = $guests;
+        $this->booking->total_price = $totalPrice;
+        $this->booking->status = $status;
+        $this->booking->special_requests = $special;
+
+        if ($this->booking->update()) {
+             
+            if ($status === 'cancelled' || $status === 'completed') {
+                $this->booking->updateRoomStatus($roomId, 'available');
+            } elseif ($status === 'confirmed') {
+                $this->booking->updateRoomStatus($roomId, 'booked');
+            }
+            return ['success' => true, 'message' => 'Booking updated successfully'];
+        }
+
+        return ['success' => false, 'errors' => ['Failed to update booking']];
+    }
+
+    
+
+
     public function getCustomerById($id) {
         return $this->customer->getById($id);
     }
 
-    /**
-     * Get booking by ID
-     */
+    
+
+
     public function getBookingById($id) {
         return $this->booking->getById($id);
+    }
+
+    
+
+
+    public function searchCustomers($searchTerm) {
+        return $this->customer->search($searchTerm);
     }
 }
 ?>

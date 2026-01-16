@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Check if user is logged in
+ 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../login_signup/php/login.php?redirect=booking');
     exit;
@@ -9,21 +9,23 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../controllers/BookingController.php';
 require_once __DIR__ . '/../controllers/RoomController.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/mailer.php';
 
 $bookingController = new BookingController();
 $roomController = new RoomController();
 
-// Get room type from URL parameter
+ 
 $roomType = isset($_GET['room_type']) ? urldecode($_GET['room_type']) : '';
 
-// Validate room type
+ 
 $validRoomTypes = ['Deluxe Room', 'Executive Suite', 'Presidential Suite', 'Romantic Suite'];
 if (!in_array($roomType, $validRoomTypes)) {
     header('Location: rooms.php');
     exit;
 }
 
-// Get room details
+ 
 $roomDetails = $bookingController->getRoomDetailsForBooking($roomType);
 if (!$roomDetails) {
     header('Location: rooms.php');
@@ -33,8 +35,14 @@ if (!$roomDetails) {
 $errors = [];
 $success = false;
 $bookingData = null;
+$extras = [
+    'breakfast' => 0,
+    'parking' => 0,
+    'airport_pickup' => 0,
+    'extra_total' => 0
+];
 
-// Handle form submission
+ 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [
         'customer_id' => $_SESSION['user_id'],
@@ -45,17 +53,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'special_requests' => $_POST['special_requests'] ?? ''
     ];
 
+     
+    $priceBreakfast = 500;
+    $priceParking = 300;
+    $priceAirport = 1500;
+    $extras['breakfast'] = isset($_POST['breakfast']) ? 1 : 0;
+    $extras['parking'] = isset($_POST['parking']) ? 1 : 0;
+    $extras['airport_pickup'] = isset($_POST['airport_pickup']) ? 1 : 0;
+    $extras['extra_total'] = ($extras['breakfast'] ? $priceBreakfast : 0) +
+                             ($extras['parking'] ? $priceParking : 0) +
+                             ($extras['airport_pickup'] ? $priceAirport : 0);
+
     $result = $bookingController->processBooking($data);
     
     if ($result['success']) {
         $success = true;
         $bookingData = $result;
+
+         
+        try {
+            $db = new Database();
+            $conn = $db->getConnection();
+            $check = $conn->prepare("SHOW TABLES LIKE 'booking_services'");
+            $check->execute();
+            if ($check->rowCount() > 0) {
+                $sql = "INSERT INTO booking_services (booking_id, breakfast, parking, airport_pickup, extra_total)
+                        VALUES (:booking_id, :breakfast, :parking, :airport_pickup, :extra_total)
+                        ON DUPLICATE KEY UPDATE
+                            breakfast = VALUES(breakfast),
+                            parking = VALUES(parking),
+                            airport_pickup = VALUES(airport_pickup),
+                            extra_total = VALUES(extra_total),
+                            updated_at = NOW()";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindValue(':booking_id', $bookingData['booking_id']);
+                $stmt->bindValue(':breakfast', $extras['breakfast']);
+                $stmt->bindValue(':parking', $extras['parking']);
+                $stmt->bindValue(':airport_pickup', $extras['airport_pickup']);
+                $stmt->bindValue(':extra_total', $extras['extra_total']);
+                $stmt->execute();
+            }
+        } catch (Exception $e) {
+             
+        }
+
+         
+        $to = $_SESSION['user_email'] ?? '';
+        $subject = "Grand Hotel Booking Confirmation #" . $bookingData['booking_id'];
+        $msg = "<h2>Booking Confirmed!</h2>
+                <p>Thanks for booking with Grand Hotel.</p>
+                <p><strong>Booking ID:</strong> #" . htmlspecialchars($bookingData['booking_id']) . "</p>
+                <p><strong>Room:</strong> " . htmlspecialchars($roomType) . " (Room " . htmlspecialchars($bookingData['room_number']) . ")</p>
+                <p><strong>Check-in:</strong> " . htmlspecialchars($data['check_in_date']) . "</p>
+                <p><strong>Check-out:</strong> " . htmlspecialchars($data['check_out_date']) . "</p>
+                <p><strong>Extras:</strong> Breakfast(" . ($extras['breakfast'] ? 'Yes' : 'No') . "),
+                    Parking(" . ($extras['parking'] ? 'Yes' : 'No') . "),
+                    Airport Pickup(" . ($extras['airport_pickup'] ? 'Yes' : 'No') . ")</p>
+                <p><strong>Extra Total:</strong> ৳" . number_format($extras['extra_total'], 2) . "</p>";
+        send_simple_email($to, $subject, $msg);
     } else {
         $errors = $result['errors'];
     }
 }
 
-// Function to get room image
+ 
 function getRoomImage($roomType) {
     $imageMap = [
         'Deluxe Room' => 'Deluxe Room.png',
@@ -68,7 +129,7 @@ function getRoomImage($roomType) {
     return '../../image/' . $imageName;
 }
 
-// Set minimum date to today
+ 
 $minDate = date('Y-m-d');
 ?>
 <!DOCTYPE html>
@@ -90,7 +151,7 @@ $minDate = date('Y-m-d');
         </header>
 
         <?php if ($success): ?>
-            <!-- Success Message -->
+            
             <div class="booking-success">
                 <div class="success-icon">✓</div>
                 <h2>Booking Confirmed!</h2>
@@ -119,11 +180,12 @@ $minDate = date('Y-m-d');
                 </div>
                 <div class="success-actions">
                     <a href="rooms.php" class="btn btn-primary">View All Rooms</a>
+                    <a href="my-bookings.php" class="btn btn-outline">My Bookings</a>
                     <a href="../../landing/php/index.php" class="btn btn-outline">Back to Home</a>
                 </div>
             </div>
         <?php else: ?>
-            <!-- Booking Form -->
+            
             <div class="booking-page">
                 <div class="booking-content">
                     <div class="booking-form-section">
@@ -166,6 +228,25 @@ $minDate = date('Y-m-d');
                                           placeholder="Any special requests or preferences?"><?php echo htmlspecialchars($_POST['special_requests'] ?? ''); ?></textarea>
                             </div>
 
+                            <div class="form-group">
+                                <label>Additional Services</label>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <label style="display:flex; gap:8px; align-items:center;">
+                                        <input type="checkbox" name="breakfast" <?php echo isset($_POST['breakfast']) ? 'checked' : ''; ?>>
+                                        Breakfast (+৳500)
+                                    </label>
+                                    <label style="display:flex; gap:8px; align-items:center;">
+                                        <input type="checkbox" name="parking" <?php echo isset($_POST['parking']) ? 'checked' : ''; ?>>
+                                        Parking (+৳300)
+                                    </label>
+                                    <label style="display:flex; gap:8px; align-items:center;">
+                                        <input type="checkbox" name="airport_pickup" <?php echo isset($_POST['airport_pickup']) ? 'checked' : ''; ?>>
+                                        Airport Pickup (+৳1500)
+                                    </label>
+                                </div>
+                                <small style="color:#777;">These are simple fixed prices (educational).</small>
+                            </div>
+
                             <button type="submit" class="btn btn-primary btn-submit">Confirm Booking</button>
                         </form>
                     </div>
@@ -201,8 +282,12 @@ $minDate = date('Y-m-d');
                                 <span>Number of nights:</span>
                                 <span id="nightsCount">-</span>
                             </div>
+                            <div class="breakdown-item">
+                                <span>Extras:</span>
+                                <span id="extraTotal">৳0.00</span>
+                            </div>
                             <div class="breakdown-total">
-                                <span>Total Price:</span>
+                                <span>Grand Total:</span>
                                 <span id="totalPrice">৳0.00</span>
                             </div>
                         </div>
@@ -217,14 +302,23 @@ $minDate = date('Y-m-d');
     </div>
 
     <script>
-        // Calculate price breakdown
+        
         const checkInInput = document.getElementById('check_in_date');
         const checkOutInput = document.getElementById('check_out_date');
         const pricePerNight = <?php echo $roomDetails['price_per_night']; ?>;
+        const breakfastCb = document.querySelector('input[name="breakfast"]');
+        const parkingCb = document.querySelector('input[name="parking"]');
+        const airportCb = document.querySelector('input[name="airport_pickup"]');
+        const PRICE_BREAKFAST = 500;
+        const PRICE_PARKING = 300;
+        const PRICE_AIRPORT = 1500;
         
         function calculatePrice() {
             const checkIn = checkInInput.value;
             const checkOut = checkOutInput.value;
+            const extras = (breakfastCb && breakfastCb.checked ? PRICE_BREAKFAST : 0) +
+                           (parkingCb && parkingCb.checked ? PRICE_PARKING : 0) +
+                           (airportCb && airportCb.checked ? PRICE_AIRPORT : 0);
             
             if (checkIn && checkOut) {
                 const checkInDate = new Date(checkIn);
@@ -233,16 +327,19 @@ $minDate = date('Y-m-d');
                 if (checkOutDate > checkInDate) {
                     const diffTime = Math.abs(checkOutDate - checkInDate);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const totalPrice = pricePerNight * diffDays;
+                    const totalPrice = (pricePerNight * diffDays) + extras;
                     
                     document.getElementById('nightsCount').textContent = diffDays + ' night' + (diffDays !== 1 ? 's' : '');
+                    document.getElementById('extraTotal').textContent = '৳' + extras.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     document.getElementById('totalPrice').textContent = '৳' + totalPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 } else {
                     document.getElementById('nightsCount').textContent = '-';
+                    document.getElementById('extraTotal').textContent = '৳' + extras.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     document.getElementById('totalPrice').textContent = '৳0.00';
                 }
             } else {
                 document.getElementById('nightsCount').textContent = '-';
+                document.getElementById('extraTotal').textContent = '৳' + extras.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 document.getElementById('totalPrice').textContent = '৳0.00';
             }
         }
@@ -251,6 +348,12 @@ $minDate = date('Y-m-d');
             checkInInput.addEventListener('change', calculatePrice);
             checkOutInput.addEventListener('change', calculatePrice);
         }
+        if (breakfastCb) breakfastCb.addEventListener('change', calculatePrice);
+        if (parkingCb) parkingCb.addEventListener('change', calculatePrice);
+        if (airportCb) airportCb.addEventListener('change', calculatePrice);
+
+        
+        calculatePrice();
     </script>
 </body>
 </html>

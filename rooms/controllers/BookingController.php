@@ -12,13 +12,13 @@ class BookingController {
         $this->room = new Room();
     }
 
-    /**
-     * Process booking submission
-     */
+    
+
+
     public function processBooking($data) {
         $errors = [];
 
-        // Validate required fields
+         
         if (empty($data['room_type'])) {
             $errors[] = "Room type is required";
         }
@@ -35,7 +35,7 @@ class BookingController {
             $errors[] = "Customer must be logged in";
         }
 
-        // Validate dates
+         
         if (!empty($data['check_in_date']) && !empty($data['check_out_date'])) {
             $checkIn = new DateTime($data['check_in_date']);
             $checkOut = new DateTime($data['check_out_date']);
@@ -54,27 +54,39 @@ class BookingController {
             return ['success' => false, 'errors' => $errors];
         }
 
-        // Get available room
-        $availableRoom = $this->booking->getAvailableRoomsForDates(
-            $data['room_type'],
-            $data['check_in_date'],
-            $data['check_out_date']
-        );
-
-        if (!$availableRoom) {
-            return ['success' => false, 'errors' => ['No available rooms for the selected dates']];
+         
+        $selectedRoomId = intval($data['room_id'] ?? 0);
+        if ($selectedRoomId > 0) {
+            $selectedRoom = $this->booking->getAvailableRoomByIdForDates(
+                $selectedRoomId,
+                $data['room_type'],
+                $data['check_in_date'],
+                $data['check_out_date']
+            );
+            if (!$selectedRoom) {
+                return ['success' => false, 'errors' => ['Selected room is not available for the selected dates. Please choose another room.']];
+            }
+        } else {
+            $selectedRoom = $this->booking->getAvailableRoomsForDates(
+                $data['room_type'],
+                $data['check_in_date'],
+                $data['check_out_date']
+            );
+            if (!$selectedRoom) {
+                return ['success' => false, 'errors' => ['No available rooms for the selected dates']];
+            }
         }
 
-        // Calculate total price
+         
         $totalPrice = $this->booking->calculateTotalPrice(
-            $availableRoom['price_per_night'],
+            $selectedRoom['price_per_night'],
             $data['check_in_date'],
             $data['check_out_date']
         );
 
-        // Create booking
+         
         $this->booking->customer_id = $data['customer_id'];
-        $this->booking->room_id = $availableRoom['id'];
+        $this->booking->room_id = $selectedRoom['id'];
         $this->booking->room_type = $data['room_type'];
         $this->booking->check_in_date = $data['check_in_date'];
         $this->booking->check_out_date = $data['check_out_date'];
@@ -84,13 +96,13 @@ class BookingController {
         $this->booking->special_requests = $data['special_requests'] ?? '';
 
         if ($this->booking->create()) {
-            // Update room status
-            $this->booking->updateRoomStatus($availableRoom['id'], 'booked');
+             
+            $this->booking->updateRoomStatus($selectedRoom['id'], 'booked');
             
             return [
                 'success' => true,
                 'booking_id' => $this->booking->id,
-                'room_number' => $availableRoom['room_number'],
+                'room_number' => $selectedRoom['room_number'],
                 'message' => 'Booking confirmed successfully!'
             ];
         }
@@ -98,16 +110,16 @@ class BookingController {
         return ['success' => false, 'errors' => ['Failed to create booking. Please try again.']];
     }
 
-    /**
-     * Get room details for booking
-     */
+    
+
+
     public function getRoomDetailsForBooking($roomType) {
         $rooms = $this->room->getByType($roomType);
         if (empty($rooms)) {
             return null;
         }
         
-        // Get price from first room (all same type have same price)
+         
         $room = $rooms[0];
         $availableCount = count(array_filter($rooms, function($r) {
             return $r['status'] === 'available';

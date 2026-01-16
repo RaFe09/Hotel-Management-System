@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 class Customer {
     private $conn;
@@ -19,9 +19,9 @@ class Customer {
         $this->conn = $database->getConnection();
     }
 
-    /**
-     * Check if email exists
-     */
+    
+
+
     public function emailExists() {
         $query = "SELECT id, first_name, last_name, email, phone 
                   FROM " . $this->table_name . " 
@@ -44,9 +44,9 @@ class Customer {
         return false;
     }
 
-    /**
-     * Create customer (for admin booking - allows creating without password)
-     */
+    
+
+
     public function create($requirePassword = false) {
         $query = "INSERT INTO " . $this->table_name . "
                   SET first_name=:first_name, last_name=:last_name, 
@@ -59,7 +59,7 @@ class Customer {
         $this->email = htmlspecialchars(strip_tags($this->email));
         $this->phone = htmlspecialchars(strip_tags($this->phone));
 
-        // Generate a random password for admin-created customers if not provided
+         
         if (empty($this->password)) {
             $randomPassword = bin2hex(random_bytes(8));
             $this->password = password_hash($randomPassword, PASSWORD_DEFAULT);
@@ -81,9 +81,9 @@ class Customer {
         return false;
     }
 
-    /**
-     * Get customer by email
-     */
+    
+
+
     public function getByEmail($email) {
         $query = "SELECT id, first_name, last_name, email, phone, created_at 
                   FROM " . $this->table_name . " 
@@ -98,9 +98,9 @@ class Customer {
         return null;
     }
 
-    /**
-     * Get customer by ID
-     */
+    
+
+
     public function getById($id) {
         $query = "SELECT id, first_name, last_name, email, phone, created_at 
                   FROM " . $this->table_name . " 
@@ -115,9 +115,9 @@ class Customer {
         return null;
     }
 
-    /**
-     * Get all customers (for admin)
-     */
+    
+
+
     public function getAll() {
         $query = "SELECT id, first_name, last_name, email, phone, created_at 
                   FROM " . $this->table_name . " 
@@ -127,9 +127,35 @@ class Customer {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Update customer
-     */
+    
+
+
+    public function search($searchTerm) {
+        if (empty($searchTerm)) {
+            return [];
+        }
+        
+        $query = "SELECT id, first_name, last_name, email, phone 
+                  FROM " . $this->table_name . " 
+                  WHERE email LIKE :search 
+                     OR first_name LIKE :search 
+                     OR last_name LIKE :search 
+                     OR CONCAT(first_name, ' ', last_name) LIKE :search
+                     OR phone LIKE :search
+                  ORDER BY first_name, last_name
+                  LIMIT 20";
+        
+        $stmt = $this->conn->prepare($query);
+        $searchPattern = '%' . $searchTerm . '%';
+        $stmt->bindParam(":search", $searchPattern);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    
+
+
     public function update() {
         $query = "UPDATE " . $this->table_name . "
                   SET first_name=:first_name, last_name=:last_name, 
@@ -152,9 +178,9 @@ class Customer {
         return $stmt->execute();
     }
 
-    /**
-     * Delete customer
-     */
+    
+
+
     public function delete() {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
         $stmt = $this->conn->prepare($query);

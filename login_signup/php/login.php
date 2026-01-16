@@ -2,18 +2,46 @@
 
 session_start();
 
-// Redirect if already logged in
+function getRedirectUrl($key) {
+     
+    switch ($key) {
+        case 'booking':
+            return '../../rooms/php/rooms.php';
+        case 'my-bookings':
+            return '../../rooms/php/my-bookings.php';
+        case 'invoice':
+            return '../../rooms/php/my-bookings.php';
+        case 'service-requests':
+            return '../../rooms/php/service-requests.php';
+        case 'review':
+            return '../../rooms/php/my-bookings.php';
+        case 'feedback':
+            return '../../rooms/php/feedback.php';
+        default:
+            return '../../landing/php/index.php';
+    }
+}
+
+$redirectKey = $_GET['redirect'] ?? '';
+$redirectUrl = getRedirectUrl($redirectKey);
+
+ 
 if (isset($_SESSION['user_id'])) {
-    header("Location: ../Landing/php/index.php");
+    header("Location: " . $redirectUrl);
     exit();
 }
 if (isset($_SESSION['admin_id'])) {
     header("Location: ../../admin/php/dashboard.php");
     exit();
 }
+if (isset($_SESSION['staff_id'])) {
+    header("Location: ../../staff/php/dashboard.php");
+    exit();
+}
 
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../../admin/controllers/AdminAuthController.php';
+require_once __DIR__ . '/../../staff/controllers/StaffAuthController.php';
 require_once __DIR__ . '/../models/Customer.php';
 
 $errors = [];
@@ -31,15 +59,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (empty($errors)) {
-        // Try admin login first
+         
         $adminAuthController = new AdminAuthController();
         if ($adminAuthController->loginByEmail($email, $password)) {
-            // Admin login successful - redirect handled in loginByEmail
+             
             header("Location: ../../admin/php/dashboard.php");
             exit();
         }
         
-        // If not admin, try user login
+         
+        $staffAuthController = new StaffAuthController();
+        if ($staffAuthController->loginByEmail($email, $password)) {
+             
+            header("Location: ../../staff/php/dashboard.php");
+            exit();
+        }
+        
+         
         $authController = new AuthController();
         $customer = new Customer();
         $customer->email = $email;
@@ -49,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $customer->id;
             $_SESSION['user_name'] = $customer->first_name . ' ' . $customer->last_name;
             $_SESSION['user_email'] = $customer->email;
-            header("Location: ../Landing/php/index.php");
+            header("Location: " . $redirectUrl);
             exit();
         } else {
             $errors[] = "Invalid email or password.";
@@ -123,7 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="auth-footer">
                 <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
-                <p><a href="../../Landing/php/index.php" class="back-link">← Back to Home</a></p>
+                <p><a href="../../landing/php/index.php" class="back-link">← Back to Home</a></p>
             </div>
         </div>
     </div>

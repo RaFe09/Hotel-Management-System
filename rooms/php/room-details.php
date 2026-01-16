@@ -3,10 +3,10 @@
 session_start();
 require_once __DIR__ . '/../controllers/RoomController.php';
 
-// Get room type from URL parameter
+ 
 $roomType = isset($_GET['type']) ? urldecode($_GET['type']) : '';
 
-// Validate room type
+ 
 $validRoomTypes = ['Deluxe Room', 'Executive Suite', 'Presidential Suite', 'Romantic Suite'];
 if (!in_array($roomType, $validRoomTypes)) {
     header('Location: rooms.php');
@@ -16,7 +16,7 @@ if (!in_array($roomType, $validRoomTypes)) {
 $roomController = new RoomController();
 $rooms = $roomController->getRoomsByType($roomType);
 
-// Group rooms by status
+ 
 $roomsByStatus = [
     'available' => [],
     'booked' => [],
@@ -27,7 +27,7 @@ foreach ($rooms as $room) {
     $roomsByStatus[$room['status']][] = $room;
 }
 
-// Function to get room image based on room type
+ 
 function getRoomImage($roomType) {
     $imageMap = [
         'Deluxe Room' => 'Deluxe Room.png',
@@ -40,11 +40,11 @@ function getRoomImage($roomType) {
     return '../../image/' . $imageName;
 }
 
-// Get price
+ 
 $prices = array_column($rooms, 'price_per_night');
-$price = $prices[0]; // All rooms of same type have same price
+$price = $prices[0];  
 
-// Room type details and amenities
+ 
 $roomDetails = [
     'Deluxe Room' => [
         'description' => 'Experience comfort and elegance in our spacious Deluxe Rooms, designed for both business and leisure travelers. These well-appointed rooms feature modern amenities and stunning views.',
@@ -78,6 +78,34 @@ $roomDetails = [
 
 $details = isset($roomDetails[$roomType]) ? $roomDetails[$roomType] : $roomDetails['Deluxe Room'];
 $availableCount = count($roomsByStatus['available']);
+
+ 
+$reviews = [];
+$reviewsReady = false;
+try {
+    require_once __DIR__ . '/../../config/database.php';
+    $db = new Database();
+    $conn = $db->getConnection();
+    $chk = $conn->prepare("SHOW TABLES LIKE 'reviews'");
+    $chk->execute();
+    $reviewsReady = $chk->rowCount() > 0;
+    if ($reviewsReady) {
+        $sql = "SELECT rv.*, c.first_name, c.last_name
+                FROM reviews rv
+                LEFT JOIN customers c ON rv.customer_id = c.id
+                LEFT JOIN rooms r ON rv.room_id = r.id
+                WHERE r.room_type = :type
+                ORDER BY rv.created_at DESC
+                LIMIT 20";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':type', $roomType);
+        $stmt->execute();
+        $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (Exception $e) {
+    $reviews = [];
+    $reviewsReady = false;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +124,7 @@ $availableCount = count($roomsByStatus['available']);
             </div>
         </header>
 
-        <!-- Hero Section -->
+        
         <section class="room-detail-hero">
             <div class="hero-image-wrapper">
                 <img src="<?php echo getRoomImage($roomType); ?>" alt="<?php echo htmlspecialchars($roomType); ?>" class="hero-main-image">
@@ -121,16 +149,16 @@ $availableCount = count($roomsByStatus['available']);
             </div>
         </section>
 
-        <!-- Room Details Section -->
+        
         <section class="room-detail-content">
             <div class="detail-main">
-                <!-- Description -->
+                
                 <div class="detail-section">
                     <h2 class="detail-section-title">Overview</h2>
                     <p class="room-description-text"><?php echo htmlspecialchars($details['description']); ?></p>
                 </div>
 
-                <!-- Room Specifications -->
+                
                 <div class="detail-section">
                     <h2 class="detail-section-title">Room Specifications</h2>
                     <div class="specs-grid">
@@ -165,7 +193,7 @@ $availableCount = count($roomsByStatus['available']);
                     </div>
                 </div>
 
-                <!-- Amenities -->
+                
                 <div class="detail-section">
                     <h2 class="detail-section-title">Amenities & Features</h2>
                     <div class="amenities-grid">
@@ -177,9 +205,42 @@ $availableCount = count($roomsByStatus['available']);
                         <?php endforeach; ?>
                     </div>
                 </div>
+
+                
+                <div class="detail-section">
+                    <h2 class="detail-section-title">Reviews</h2>
+                    <?php if (!$reviewsReady): ?>
+                        <p style="color:#777;">(Reviews table not setup yet. Run <code>db/new_features.sql</code>)</p>
+                    <?php elseif (empty($reviews)): ?>
+                        <p style="color:#777;">No reviews yet.</p>
+                    <?php else: ?>
+                        <div style="display:grid; grid-template-columns: 1fr; gap: 10px;">
+                            <?php foreach ($reviews as $rv): ?>
+                                <div style="border:1px solid #eee; border-radius:10px; padding:12px; background:white;">
+                                    <div style="display:flex; justify-content:space-between; gap:10px;">
+                                        <strong>
+                                            <?php echo htmlspecialchars(($rv['first_name'] ?? 'Guest') . ' ' . ($rv['last_name'] ?? '')); ?>
+                                        </strong>
+                                        <span>
+                                            Rating: <strong><?php echo (int)$rv['rating']; ?>/5</strong>
+                                        </span>
+                                    </div>
+                                    <?php if (!empty($rv['comment'])): ?>
+                                        <div style="margin-top: 8px; color:#444;">
+                                            <?php echo htmlspecialchars($rv['comment']); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div style="margin-top: 8px; color:#777; font-size: 12px;">
+                                        <?php echo date('M d, Y', strtotime($rv['created_at'])); ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <!-- Sidebar -->
+            
             <div class="detail-sidebar">
                 <div class="booking-card">
                     <div class="booking-header">
