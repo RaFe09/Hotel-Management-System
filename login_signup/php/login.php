@@ -2,6 +2,8 @@
 
 session_start();
 
+require_once __DIR__ . '/../../utils/CookieManager.php';
+
 function getRedirectUrl($key) {
      
     switch ($key) {
@@ -26,6 +28,33 @@ $redirectKey = $_GET['redirect'] ?? '';
 $redirectUrl = getRedirectUrl($redirectKey);
 
  
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['admin_id']) && !isset($_SESSION['staff_id'])) {
+    $rememberMe = CookieManager::getRememberMe();
+    if ($rememberMe) {
+        require_once __DIR__ . '/../controllers/AuthController.php';
+        require_once __DIR__ . '/../../admin/controllers/AdminAuthController.php';
+        require_once __DIR__ . '/../../staff/controllers/StaffAuthController.php';
+        
+         
+        if ($rememberMe['user_type'] === 'admin') {
+            $adminAuthController = new AdminAuthController();
+             
+             
+             
+            CookieManager::clearRememberMe();
+        } elseif ($rememberMe['user_type'] === 'staff') {
+            $staffAuthController = new StaffAuthController();
+             
+            CookieManager::clearRememberMe();
+        } elseif ($rememberMe['user_type'] === 'customer') {
+            $authController = new AuthController();
+             
+            CookieManager::clearRememberMe();
+        }
+    }
+}
+
+ 
 if (isset($_SESSION['user_id'])) {
     header("Location: " . $redirectUrl);
     exit();
@@ -45,6 +74,13 @@ require_once __DIR__ . '/../../staff/controllers/StaffAuthController.php';
 require_once __DIR__ . '/../models/Customer.php';
 
 $errors = [];
+$rememberMe = isset($_POST['remember_me']) && $_POST['remember_me'] === 'on';
+
+ 
+$savedEmail = CookieManager::get('last_login_email', '');
+if (!isset($_POST['email']) && !empty($savedEmail)) {
+    $_POST['email'] = $savedEmail;
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'] ?? '';
@@ -63,6 +99,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $adminAuthController = new AdminAuthController();
         if ($adminAuthController->loginByEmail($email, $password)) {
              
+            CookieManager::set('last_login_email', $email, CookieManager::PREFERENCE_EXPIRY, false, false, 'Lax');
+            
+             
+            if ($rememberMe) {
+                CookieManager::setRememberMe($_SESSION['admin_id'], 'admin');
+            }
+            
+             
+            CookieManager::trackVisit('admin_login');
+             
             header("Location: ../../admin/php/dashboard.php");
             exit();
         }
@@ -70,6 +116,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
          
         $staffAuthController = new StaffAuthController();
         if ($staffAuthController->loginByEmail($email, $password)) {
+             
+            CookieManager::set('last_login_email', $email, CookieManager::PREFERENCE_EXPIRY, false, false, 'Lax');
+            
+             
+            if ($rememberMe) {
+                CookieManager::setRememberMe($_SESSION['staff_id'], 'staff');
+            }
+            
+             
+            CookieManager::trackVisit('staff_login');
              
             header("Location: ../../staff/php/dashboard.php");
             exit();
@@ -85,6 +141,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $customer->id;
             $_SESSION['user_name'] = $customer->first_name . ' ' . $customer->last_name;
             $_SESSION['user_email'] = $customer->email;
+            
+             
+            CookieManager::set('last_login_email', $email, CookieManager::PREFERENCE_EXPIRY, false, false, 'Lax');
+            
+             
+            if ($rememberMe) {
+                CookieManager::setRememberMe($customer->id, 'customer');
+            }
+            
+             
+            CookieManager::trackVisit('customer_login');
+            
             header("Location: " . $redirectUrl);
             exit();
         } else {
@@ -126,7 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         id="email" 
                         name="email" 
                         placeholder="Enter your email"
-                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : (isset($savedEmail) ? htmlspecialchars($savedEmail) : ''); ?>"
                         required
                         autofocus
                     >
@@ -148,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <div class="form-options">
                     <label class="checkbox-label">
-                        <input type="checkbox" name="remember_me">
+                        <input type="checkbox" name="remember_me" id="remember_me" <?php echo CookieManager::exists('remember_me_token') ? 'checked' : ''; ?>>
                         <span>Remember me</span>
                     </label>
                     <a href="#" class="forgot-password">Forgot Password?</a>

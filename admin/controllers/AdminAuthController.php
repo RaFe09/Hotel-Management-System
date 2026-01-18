@@ -101,10 +101,15 @@ class AdminAuthController {
     }
 
     
-
+    
 
     public function logout() {
         session_start();
+        
+         
+        require_once __DIR__ . '/../../utils/CookieManager.php';
+        CookieManager::clearRememberMe();
+        
         session_unset();
         session_destroy();
         header("Location: ../../login_signup/php/login.php");

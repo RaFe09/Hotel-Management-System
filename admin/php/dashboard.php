@@ -4,8 +4,15 @@ session_start();
 require_once __DIR__ . '/../controllers/AdminAuthController.php';
 require_once __DIR__ . '/../controllers/AdminBookingController.php';
 require_once __DIR__ . '/../models/Room.php';
+require_once __DIR__ . '/../../utils/CookieManager.php';
 
 AdminAuthController::requireLogin();
+
+ 
+CookieManager::trackVisit('admin_dashboard', [
+    'user_type' => 'admin',
+    'admin_id' => $_SESSION['admin_id'] ?? null
+]);
 
 $bookingController = new AdminBookingController();
 $room = new Room();
@@ -22,6 +29,7 @@ $recentBookings = array_slice($allBookings, 0, 5);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Grand Hotel</title>
     <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/cookies.js"></script>
 </head>
 <body>
     <div class="admin-container">

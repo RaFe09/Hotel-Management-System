@@ -3,6 +3,9 @@
 session_start();
 
  
+require_once __DIR__ . '/../../utils/CookieManager.php';
+
+ 
 $isAdmin = isset($_SESSION['admin_id']);
 $isStaff = isset($_SESSION['staff_id']);
 require_once __DIR__ . '/../../config/database.php';
@@ -164,9 +167,15 @@ $bookingData = null;
 $availableRoomsForSelect = [];
 
  
-$selectedRoomType = $_POST['room_type'] ?? $roomType;
-$selectedCheckIn = $_POST['check_in_date'] ?? '';
-$selectedCheckOut = $_POST['check_out_date'] ?? '';
+$savedFormData = null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $savedFormData = CookieManager::getFormData('booking');
+}
+
+ 
+$selectedRoomType = $_POST['room_type'] ?? ($savedFormData['room_type'] ?? $roomType);
+$selectedCheckIn = $_POST['check_in_date'] ?? ($savedFormData['check_in_date'] ?? '');
+$selectedCheckOut = $_POST['check_out_date'] ?? ($savedFormData['check_out_date'] ?? '');
 
 if (!empty($selectedRoomType) && in_array($selectedRoomType, $validRoomTypes, true)) {
      
@@ -237,9 +246,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result['success']) {
             $success = true;
             $bookingData = $result;
+            
+             
+            CookieManager::clearFormData('booking');
         } else {
             $errors = $result['errors'];
+            
+             
+            $formDataToSave = [
+                'room_type' => $data['room_type'],
+                'room_id' => $data['room_id'],
+                'check_in_date' => $data['check_in_date'],
+                'check_out_date' => $data['check_out_date'],
+                'number_of_guests' => $data['number_of_guests'],
+                'customer_type' => $_POST['customer_type'] ?? 'new',
+                'customer_id' => $data['customer_id'] ?? null,
+                'first_name' => $data['first_name'] ?? '',
+                'last_name' => $data['last_name'] ?? '',
+                'customer_email' => $data['customer_email'] ?? '',
+                'phone' => $data['phone'] ?? '',
+                'special_requests' => $data['special_requests'] ?? ''
+            ];
+            CookieManager::saveFormData('booking', $formDataToSave);
         }
+    } else {
+         
+        $formDataToSave = [
+            'room_type' => $data['room_type'] ?? '',
+            'room_id' => $data['room_id'] ?? 0,
+            'check_in_date' => $data['check_in_date'] ?? '',
+            'check_out_date' => $data['check_out_date'] ?? '',
+            'number_of_guests' => $data['number_of_guests'] ?? 1,
+            'customer_type' => $_POST['customer_type'] ?? 'new',
+            'customer_id' => $data['customer_id'] ?? null,
+            'first_name' => $data['first_name'] ?? '',
+            'last_name' => $data['last_name'] ?? '',
+            'customer_email' => $data['customer_email'] ?? '',
+            'phone' => $data['phone'] ?? '',
+            'special_requests' => $data['special_requests'] ?? ''
+        ];
+        CookieManager::saveFormData('booking', $formDataToSave);
     }
 }
 
@@ -256,6 +302,7 @@ $searchUrl = 'search-customers.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Room for Customer - <?php echo ucfirst($userType); ?></title>
     <link rel="stylesheet" href="../css/styles.css">
+    <script src="../js/cookies.js"></script>
 </head>
 <body>
     <div class="admin-container">
@@ -304,13 +351,19 @@ $searchUrl = 'search-customers.php';
                                 <div class="radio-group">
                                     <label class="radio-label">
                                         <input type="radio" name="customer_type" value="existing" id="customer_type_existing" 
-                                               <?php echo (isset($_POST['customer_type']) && $_POST['customer_type'] === 'existing') ? 'checked' : ''; ?> 
+                                               <?php 
+                                               $customerType = $_POST['customer_type'] ?? ($savedFormData['customer_type'] ?? 'new');
+                                               echo ($customerType === 'existing') ? 'checked' : ''; 
+                                               ?> 
                                                onchange="toggleCustomerForm()">
                                         <span>Existing Customer</span>
                                     </label>
                                     <label class="radio-label">
                                         <input type="radio" name="customer_type" value="new" id="customer_type_new" 
-                                               <?php echo (!isset($_POST['customer_type']) || $_POST['customer_type'] === 'new') ? 'checked' : ''; ?> 
+                                               <?php 
+                                               $customerType = $_POST['customer_type'] ?? ($savedFormData['customer_type'] ?? 'new');
+                                               echo ($customerType === 'new') ? 'checked' : ''; 
+                                               ?> 
                                                onchange="toggleCustomerForm()">
                                         <span>New Customer</span>
                                     </label>
@@ -325,7 +378,7 @@ $searchUrl = 'search-customers.php';
                                            placeholder="Search by name, email, or phone..." 
                                            autocomplete="off"
                                            oninput="searchCustomers(this.value)">
-                                    <input type="hidden" id="customer_id" name="customer_id" value="<?php echo htmlspecialchars($_POST['customer_id'] ?? ''); ?>">
+                                    <input type="hidden" id="customer_id" name="customer_id" value="<?php echo htmlspecialchars($_POST['customer_id'] ?? ($savedFormData['customer_id'] ?? '')); ?>">
                                     <div id="customer_search_results" style="position: relative;"></div>
                                 </div>
                                 <div id="selected_customer_info" class="selected-customer-info" style="display: none;">
@@ -341,12 +394,12 @@ $searchUrl = 'search-customers.php';
                                     <div class="form-group">
                                         <label for="first_name">First Name *</label>
                                         <input type="text" id="first_name" name="first_name" 
-                                               value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>">
+                                               value="<?php echo htmlspecialchars($_POST['first_name'] ?? ($savedFormData['first_name'] ?? '')); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label for="last_name">Last Name *</label>
                                         <input type="text" id="last_name" name="last_name" 
-                                               value="<?php echo htmlspecialchars($_POST['last_name'] ?? ''); ?>">
+                                               value="<?php echo htmlspecialchars($_POST['last_name'] ?? ($savedFormData['last_name'] ?? '')); ?>">
                                     </div>
                                 </div>
 
@@ -354,12 +407,12 @@ $searchUrl = 'search-customers.php';
                                     <div class="form-group">
                                         <label for="customer_email">Email *</label>
                                         <input type="email" id="customer_email" name="customer_email" 
-                                               value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ''); ?>">
+                                               value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ($savedFormData['customer_email'] ?? '')); ?>">
                                     </div>
                                     <div class="form-group">
                                         <label for="phone">Phone *</label>
                                         <input type="tel" id="phone" name="phone" 
-                                               value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+                                               value="<?php echo htmlspecialchars($_POST['phone'] ?? ($savedFormData['phone'] ?? '')); ?>">
                                     </div>
                                 </div>
                             </div>
@@ -381,10 +434,13 @@ $searchUrl = 'search-customers.php';
                                 <label for="room_type">Room Type *</label>
                                 <select id="room_type" name="room_type" required onchange="updateRoomDetails()">
                                     <option value="">Select Room Type</option>
-                                    <option value="Deluxe Room" <?php echo ($roomType === 'Deluxe Room' || (isset($_POST['room_type']) && $_POST['room_type'] === 'Deluxe Room')) ? 'selected' : ''; ?>>Deluxe Room</option>
-                                    <option value="Executive Suite" <?php echo ($roomType === 'Executive Suite' || (isset($_POST['room_type']) && $_POST['room_type'] === 'Executive Suite')) ? 'selected' : ''; ?>>Executive Suite</option>
-                                    <option value="Presidential Suite" <?php echo ($roomType === 'Presidential Suite' || (isset($_POST['room_type']) && $_POST['room_type'] === 'Presidential Suite')) ? 'selected' : ''; ?>>Presidential Suite</option>
-                                    <option value="Romantic Suite" <?php echo ($roomType === 'Romantic Suite' || (isset($_POST['room_type']) && $_POST['room_type'] === 'Romantic Suite')) ? 'selected' : ''; ?>>Romantic Suite</option>
+                                    <?php 
+                                    $currentRoomType = $_POST['room_type'] ?? ($savedFormData['room_type'] ?? $roomType);
+                                    ?>
+                                    <option value="Deluxe Room" <?php echo ($currentRoomType === 'Deluxe Room') ? 'selected' : ''; ?>>Deluxe Room</option>
+                                    <option value="Executive Suite" <?php echo ($currentRoomType === 'Executive Suite') ? 'selected' : ''; ?>>Executive Suite</option>
+                                    <option value="Presidential Suite" <?php echo ($currentRoomType === 'Presidential Suite') ? 'selected' : ''; ?>>Presidential Suite</option>
+                                    <option value="Romantic Suite" <?php echo ($currentRoomType === 'Romantic Suite') ? 'selected' : ''; ?>>Romantic Suite</option>
                                 </select>
                             </div>
 
@@ -392,13 +448,13 @@ $searchUrl = 'search-customers.php';
                                 <div class="form-group">
                                     <label for="check_in_date">Check-in Date *</label>
                                     <input type="date" id="check_in_date" name="check_in_date" 
-                                           value="<?php echo htmlspecialchars($_POST['check_in_date'] ?? ''); ?>" 
+                                           value="<?php echo htmlspecialchars($_POST['check_in_date'] ?? ($savedFormData['check_in_date'] ?? '')); ?>" 
                                            min="<?php echo $minDate; ?>" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="check_out_date">Check-out Date *</label>
                                     <input type="date" id="check_out_date" name="check_out_date" 
-                                           value="<?php echo htmlspecialchars($_POST['check_out_date'] ?? ''); ?>" 
+                                           value="<?php echo htmlspecialchars($_POST['check_out_date'] ?? ($savedFormData['check_out_date'] ?? '')); ?>" 
                                            min="<?php echo $minDate; ?>" required>
                                 </div>
                             </div>
@@ -419,7 +475,7 @@ $searchUrl = 'search-customers.php';
                             <div class="form-group">
                                 <label for="number_of_guests">Number of Guests *</label>
                                 <input type="number" id="number_of_guests" name="number_of_guests" 
-                                       value="<?php echo htmlspecialchars($_POST['number_of_guests'] ?? '1'); ?>" 
+                                       value="<?php echo htmlspecialchars($_POST['number_of_guests'] ?? ($savedFormData['number_of_guests'] ?? '1')); ?>" 
                                        min="1" max="10" required>
                             </div>
 
@@ -427,7 +483,7 @@ $searchUrl = 'search-customers.php';
                                 <?php if ($userType === 'admin'): ?>
                                     <label for="special_requests">Special Requests</label>
                                     <textarea id="special_requests" name="special_requests" rows="4" 
-                                              placeholder="Any special requests or preferences?"><?php echo htmlspecialchars($_POST['special_requests'] ?? ''); ?></textarea>
+                                              placeholder="Any special requests or preferences?"><?php echo htmlspecialchars($_POST['special_requests'] ?? ($savedFormData['special_requests'] ?? '')); ?></textarea>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -642,6 +698,39 @@ $searchUrl = 'search-customers.php';
             toggleCustomerForm();
             updateAvailableRooms();
 
+            
+            let saveTimeout;
+            const formFields = ['room_type', 'check_in_date', 'check_out_date', 'number_of_guests', 
+                               'first_name', 'last_name', 'customer_email', 'phone', 'special_requests'];
+            
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function() {
+                        clearTimeout(saveTimeout);
+                        saveTimeout = setTimeout(saveFormData, 1000); 
+                    });
+                    field.addEventListener('change', saveFormData);
+                }
+            });
+            
+            function saveFormData() {
+                const formData = {
+                    room_type: document.getElementById('room_type')?.value || '',
+                    check_in_date: document.getElementById('check_in_date')?.value || '',
+                    check_out_date: document.getElementById('check_out_date')?.value || '',
+                    number_of_guests: document.getElementById('number_of_guests')?.value || '1',
+                    customer_type: document.querySelector('input[name="customer_type"]:checked')?.value || 'new',
+                    first_name: document.getElementById('first_name')?.value || '',
+                    last_name: document.getElementById('last_name')?.value || '',
+                    customer_email: document.getElementById('customer_email')?.value || '',
+                    phone: document.getElementById('phone')?.value || '',
+                    special_requests: document.getElementById('special_requests')?.value || ''
+                };
+                
+                
+                
+            }
             
             ['room_type','check_in_date','check_out_date'].forEach(id => {
                 const el = document.getElementById(id);
