@@ -55,7 +55,6 @@ class AuthController {
                     $_SESSION['user_id'] = $this->customer->id;
                     $_SESSION['user_name'] = $this->customer->first_name . ' ' . $this->customer->last_name;
                     $_SESSION['user_email'] = $this->customer->email;
-                    
                     header("Location: signup_success.php");
                     exit();
                 } else {
@@ -87,7 +86,6 @@ class AuthController {
                     $_SESSION['user_id'] = $this->customer->id;
                     $_SESSION['user_name'] = $this->customer->first_name . ' ' . $this->customer->last_name;
                     $_SESSION['user_email'] = $this->customer->email;
-                    
                     header("Location: ../../landing/php/index.php");
                     exit();
                 } else {
@@ -102,14 +100,15 @@ class AuthController {
     public function logout() {
         session_start();
         
+        // Clear remember me cookie if exists
         require_once __DIR__ . '/../../utils/CookieManager.php';
         CookieManager::clearRememberMe();
         
         session_unset();
         session_destroy();
-        
         header("Location: login.php");
         exit();
     }
 }
 ?>
+

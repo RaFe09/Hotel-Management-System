@@ -67,8 +67,8 @@ try {
             <div class="header-actions">
                 <a href="../../landing/php/index.php" class="btn-back">← Back to Home</a>
                 <a href="rooms.php" class="btn-back" style="margin-left: 10px;">Rooms</a>
-                <a href="service-requests.php" class="btn-back" style="margin-left: 10px;">Service Requests</a>
-                <a href="feedback.php" class="btn-back" style="margin-left: 10px;">Feedback</a>
+                <a href="profile.php" class="btn-back" style="margin-left: 10px;">Profile</a>
+                <a href="review.php" class="btn-back" style="margin-left: 10px;">Review</a>
             </div>
         </header>
 

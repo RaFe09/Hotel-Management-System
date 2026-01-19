@@ -17,6 +17,8 @@ function getRedirectUrl($key) {
             return '../../rooms/php/service-requests.php';
         case 'review':
             return '../../rooms/php/my-bookings.php';
+        case 'feedback':
+            return '../../rooms/php/feedback.php';
         default:
             return '../../landing/php/index.php';
     }
@@ -25,23 +27,28 @@ function getRedirectUrl($key) {
 $redirectKey = $_GET['redirect'] ?? '';
 $redirectUrl = getRedirectUrl($redirectKey);
 
- 
-if (!isset($_SESSION['user_id']) && !isset($_SESSION['admin_id'])) {
+// Check for remember me cookie if not logged in
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['admin_id']) && !isset($_SESSION['staff_id'])) {
     $rememberMe = CookieManager::getRememberMe();
     if ($rememberMe) {
         require_once __DIR__ . '/../controllers/AuthController.php';
         require_once __DIR__ . '/../../admin/controllers/AdminAuthController.php';
+        require_once __DIR__ . '/../../staff/controllers/StaffAuthController.php';
         
-         
+        // Restore session based on remember me data
         if ($rememberMe['user_type'] === 'admin') {
             $adminAuthController = new AdminAuthController();
-            
-            
-            
+            // Note: Remember me only stores user_id, need to verify with database
+            // For security, we could store minimal session info here
+            // For now, redirect to regular login to re-authenticate
+            CookieManager::clearRememberMe();
+        } elseif ($rememberMe['user_type'] === 'staff') {
+            $staffAuthController = new StaffAuthController();
+            // Similar note as above
             CookieManager::clearRememberMe();
         } elseif ($rememberMe['user_type'] === 'customer') {
             $authController = new AuthController();
-            
+            // Similar note as above
             CookieManager::clearRememberMe();
         }
     }
@@ -56,15 +63,20 @@ if (isset($_SESSION['admin_id'])) {
     header("Location: ../../admin/php/dashboard.php");
     exit();
 }
+if (isset($_SESSION['staff_id'])) {
+    header("Location: ../../staff/php/dashboard.php");
+    exit();
+}
 
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../../admin/controllers/AdminAuthController.php';
+require_once __DIR__ . '/../../staff/controllers/StaffAuthController.php';
 require_once __DIR__ . '/../models/Customer.php';
 
 $errors = [];
 $rememberMe = isset($_POST['remember_me']) && $_POST['remember_me'] === 'on';
 
- 
+// Get saved email from cookie for better UX
 $savedEmail = CookieManager::get('last_login_email', '');
 if (!isset($_POST['email']) && !empty($savedEmail)) {
     $_POST['email'] = $savedEmail;
@@ -86,18 +98,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
          
         $adminAuthController = new AdminAuthController();
         if ($adminAuthController->loginByEmail($email, $password)) {
-             
+            // Save email to cookie for convenience
             CookieManager::set('last_login_email', $email, CookieManager::PREFERENCE_EXPIRY, false, false, 'Lax');
             
-             
+            // Set remember me cookie if requested
             if ($rememberMe) {
                 CookieManager::setRememberMe($_SESSION['admin_id'], 'admin');
             }
             
-             
+            // Track login
             CookieManager::trackVisit('admin_login');
              
             header("Location: ../../admin/php/dashboard.php");
+            exit();
+        }
+        
+         
+        $staffAuthController = new StaffAuthController();
+        if ($staffAuthController->loginByEmail($email, $password)) {
+            // Save email to cookie for convenience
+            CookieManager::set('last_login_email', $email, CookieManager::PREFERENCE_EXPIRY, false, false, 'Lax');
+            
+            // Set remember me cookie if requested
+            if ($rememberMe) {
+                CookieManager::setRememberMe($_SESSION['staff_id'], 'staff');
+            }
+            
+            // Track login
+            CookieManager::trackVisit('staff_login');
+             
+            header("Location: ../../staff/php/dashboard.php");
             exit();
         }
         
@@ -112,15 +142,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_name'] = $customer->first_name . ' ' . $customer->last_name;
             $_SESSION['user_email'] = $customer->email;
             
-             
+            // Save email to cookie for convenience
             CookieManager::set('last_login_email', $email, CookieManager::PREFERENCE_EXPIRY, false, false, 'Lax');
             
-             
+            // Set remember me cookie if requested
             if ($rememberMe) {
                 CookieManager::setRememberMe($customer->id, 'customer');
             }
             
-             
+            // Track login
             CookieManager::trackVisit('customer_login');
             
             header("Location: " . $redirectUrl);

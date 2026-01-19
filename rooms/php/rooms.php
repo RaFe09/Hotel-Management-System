@@ -58,6 +58,7 @@ function getPriceRange($rooms) {
                 <a href="search.php" class="btn-back" style="margin-left: 10px;">Search Rooms</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="my-bookings.php" class="btn-back" style="margin-left: 10px;">My Bookings</a>
+                    <a href="profile.php" class="btn-back" style="margin-left: 10px;">Profile</a>
                 <?php endif; ?>
             </div>
         </header>
