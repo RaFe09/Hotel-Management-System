@@ -218,9 +218,4 @@ Before deploying to production, review and improve:
   - Confirm project folder name is exactly `Hotel-Management-System` under `htdocs`
   - Verify asset paths in the PHP files (relative URLs)
 
----
-
-## License
-
-If you plan to publish this project, add your chosen license here (e.g. MIT, GPL, proprietary). For now, this README assumes **private / educational use** unless you specify otherwise.
 
