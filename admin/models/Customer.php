@@ -19,9 +19,6 @@ class Customer {
         $this->conn = $database->getConnection();
     }
 
-    
-
-
     public function emailExists() {
         $query = "SELECT id, first_name, last_name, email, phone 
                   FROM " . $this->table_name . " 
@@ -29,7 +26,9 @@ class Customer {
                   LIMIT 1";
 
         $stmt = $this->conn->prepare($query);
+        
         $stmt->bindParam(":email", $this->email);
+        
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
@@ -44,9 +43,6 @@ class Customer {
         return false;
     }
 
-    
-
-
     public function create($requirePassword = false) {
         $query = "INSERT INTO " . $this->table_name . "
                   SET first_name=:first_name, last_name=:last_name, 
@@ -59,7 +55,6 @@ class Customer {
         $this->email = htmlspecialchars(strip_tags($this->email));
         $this->phone = htmlspecialchars(strip_tags($this->phone));
 
-         
         if (empty($this->password)) {
             $randomPassword = bin2hex(random_bytes(8));
             $this->password = password_hash($randomPassword, PASSWORD_DEFAULT);
@@ -81,9 +76,6 @@ class Customer {
         return false;
     }
 
-    
-
-
     public function getByEmail($email) {
         $query = "SELECT id, first_name, last_name, email, phone, created_at 
                   FROM " . $this->table_name . " 
@@ -97,9 +89,6 @@ class Customer {
         }
         return null;
     }
-
-    
-
 
     public function getById($id) {
         $query = "SELECT id, first_name, last_name, email, phone, created_at 
@@ -115,9 +104,6 @@ class Customer {
         return null;
     }
 
-    
-
-
     public function getAll() {
         $query = "SELECT id, first_name, last_name, email, phone, created_at 
                   FROM " . $this->table_name . " 
@@ -126,9 +112,6 @@ class Customer {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-    
-
 
     public function search($searchTerm) {
         if (empty($searchTerm)) {
@@ -153,9 +136,6 @@ class Customer {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    
-
-
     public function update() {
         $query = "UPDATE " . $this->table_name . "
                   SET first_name=:first_name, last_name=:last_name, 
@@ -177,9 +157,6 @@ class Customer {
         
         return $stmt->execute();
     }
-
-    
-
 
     public function delete() {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";

@@ -1,22 +1,46 @@
 <?php
+/**
+ * ROOM MODEL
+ * 
+ * WHAT IS THIS FILE?
+ * This file handles all database operations for rooms.
+ * It can add, update, delete, and retrieve room information.
+ * 
+ * FOR BEGINNERS:
+ * - This is like a helper that talks to the database about rooms
+ * - Instead of writing database queries everywhere, we put them here
+ */
 
+// Include the database connection file
 require_once __DIR__ . '/../../config/database.php';
 
+/**
+ * Room Class
+ * This class handles all room database operations
+ */
 class Room {
-    private $conn;
-    private $table_name = "rooms";
+    // Database connection and table name
+    private $conn;                      // Database connection
+    private $table_name = "rooms";      // Name of the rooms table in database
 
-    public $id;
-    public $room_number;
-    public $room_type;
-    public $status;
-    public $floor_number;
-    public $price_per_night;
-    public $description;
-    public $created_at;
-    public $updated_at;
+    // Room properties - these store room information
+    public $id;                 // Room ID (automatically assigned)
+    public $room_number;        // Room number (e.g., "101", "202")
+    public $room_type;          // Type of room (e.g., "Deluxe Room", "Suite")
+    public $status;             // Room status: 'available', 'booked', 'maintenance'
+    public $floor_number;       // Which floor the room is on
+    public $price_per_night;    // Cost per night
+    public $description;        // Description of the room
+    public $created_at;         // When room was added (automatic)
+    public $updated_at;         // When room was last updated (automatic)
 
+    /**
+     * CONSTRUCTOR
+     * This runs automatically when we create a new Room object
+     * It connects to the database
+     */
     public function __construct() {
+        // Create database connection
         $database = new Database();
         $this->conn = $database->getConnection();
     }

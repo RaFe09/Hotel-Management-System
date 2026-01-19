@@ -9,9 +9,6 @@ class AdminAuthController {
         $this->admin = new Admin();
     }
 
-    
-
-
     public function loginByEmail($email, $password) {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -38,9 +35,6 @@ class AdminAuthController {
         
         return false;
     }
-
-    
-
 
     public function login() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -77,18 +71,12 @@ class AdminAuthController {
         return $errors;
     }
 
-    
-
-
     public static function isLoggedIn() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         return isset($_SESSION['admin_id']);
     }
-
-    
-
 
     public static function requireLogin() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -100,13 +88,9 @@ class AdminAuthController {
         }
     }
 
-    
-    
-
     public function logout() {
         session_start();
         
-         
         require_once __DIR__ . '/../../utils/CookieManager.php';
         CookieManager::clearRememberMe();
         

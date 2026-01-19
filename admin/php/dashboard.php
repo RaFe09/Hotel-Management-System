@@ -1,23 +1,14 @@
 <?php
-
 session_start();
 require_once __DIR__ . '/../controllers/AdminAuthController.php';
 require_once __DIR__ . '/../controllers/AdminBookingController.php';
 require_once __DIR__ . '/../models/Room.php';
-require_once __DIR__ . '/../../utils/CookieManager.php';
 
 AdminAuthController::requireLogin();
-
- 
-CookieManager::trackVisit('admin_dashboard', [
-    'user_type' => 'admin',
-    'admin_id' => $_SESSION['admin_id'] ?? null
-]);
 
 $bookingController = new AdminBookingController();
 $room = new Room();
 
- 
 $roomStats = $room->getStatistics();
 $allBookings = $bookingController->getAllBookings();
 $recentBookings = array_slice($allBookings, 0, 5);  
@@ -27,27 +18,21 @@ $recentBookings = array_slice($allBookings, 0, 5);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Grand Hotel</title>
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <script src="../js/cookies.js"></script>
 </head>
 <body>
     <div class="admin-container">
         <header class="admin-header">
             <div class="header-content">
-                <h1>Grand Hotel - Admin Dashboard</h1>
+                <h1>Hotel Admin Dashboard</h1>
                 <div class="header-actions">
                     <span class="admin-name">Welcome, <?php echo htmlspecialchars($_SESSION['admin_name']); ?></span>
                     <a href="book-room.php" class="btn btn-primary">Book Room</a>
-                    <a href="manage-rooms.php" class="btn btn-outline">Manage Rooms</a>
-                    <a href="rooms-crud.php" class="btn btn-outline">Room Listings</a>
-                    <a href="bookings.php" class="btn btn-outline">Manage Bookings</a>
-                    <a href="customers.php" class="btn btn-outline">Manage Customers</a>
-                    <a href="staff.php" class="btn btn-outline">Staff</a>
+                    <a href="manage-rooms.php" class="btn btn-outline">Rooms</a>
+                    <a href="bookings.php" class="btn btn-outline">Bookings</a>
+                    <a href="customers.php" class="btn btn-outline">Customers</a>
                     <a href="reports.php" class="btn btn-outline">Reports</a>
-                    <a href="complaints.php" class="btn btn-outline">Complaints</a>
-                    <a href="service-requests.php" class="btn btn-outline">Service Requests</a>
-                    <a href="staff-performance.php" class="btn btn-outline">Performance</a>
                     <a href="logout.php" class="btn btn-outline">Logout</a>
                 </div>
             </div>
